@@ -7,11 +7,16 @@ Created on Thu Feb 10 10:31:23 2022
 
 import glob, os, pickle, time
 
-import plateforme_lidar as pl
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold
 from sklearn import metrics
 import numpy as np
+
+import cv2
+
+import plateforme_lidar as pl
+
+import cc
 
 #%% define functions
 def computeFeatures(workspace, PCX_filename, params_CC, params_features):
@@ -25,31 +30,41 @@ def computeFeatures(workspace, PCX_filename, params_CC, params_features):
     os.rename(workspace + PCX_filename[0:-4] + "_features.sbf.data", 
               workspace + "features/" + PCX_filename[0:-4] + "_features.sbf.data")
 
-def CrossValidation(model,cv,X,y_true):
-    scores1 = dict(zip(list(np.unique(y_true)) + ['all'],
-                       [[] for i in range(0, len(np.unique(y_true)) + 1)]))
-    scores2 = dict(zip(list(np.unique(y_true)) + ['all'],
-                       [[] for i in range(0, len(np.unique(y_true)) + 1)]))
+def CrossValidation(model, validator, X, y_true):
+    scores1 = dict(
+        zip(
+            list(np.unique(y_true)) + ['all'],
+            [[] for i in range(0, len(np.unique(y_true)) + 1)])
+        )
+    scores2 = dict(
+        zip(
+            list(np.unique(y_true)) + ['all'],
+            [[] for i in range(0, len(np.unique(y_true)) + 1)])
+        )
     feat_import = []
     compt = 1
-    print("Cross Validation test with %i folds:" %cv.get_n_splits())
-    for train_idx, test_idx in cv.split(X, y_true):
+    print("Cross Validation test with %i folds:" %validator.get_n_splits())
+    for train_idx, test_idx in validator.split(X, y_true):
         print(str(compt) + "...", end="\r")
         compt += 1
         model.fit(X[train_idx,:], y_true[train_idx])
         y_pred = model.predict(X[test_idx,:])
         scores1['all'] += [metrics.cohen_kappa_score(y_pred, y_true[test_idx])]
         scores2['all'] += [metrics.accuracy_score(y_true[test_idx], y_pred)]
-        feat_import += [model.feature_importances_*100]
+        feat_import += [model.feature_importances_ * 100]
         for label in np.unique(y_true):
-            scores1[label] += [metrics.cohen_kappa_score(y_pred==label, y_true[test_idx]==label)]
-            scores2[label] += [metrics.accuracy_score(y_true[test_idx]==label, y_pred==label)]
+            scores1[label] += [metrics.cohen_kappa_score(
+                y_pred == label, y_true[test_idx] == label)
+                ]
+            scores2[label] += [metrics.accuracy_score(
+                y_true[test_idx] == label, y_pred == label)
+                ]
     print("done !")
     return scores1, scores2, np.mean(feat_import, axis=0)
 
 #%% LIST FEATURES
 # the trailing / is needed here for compliance when defining dir_
-dir_ = 'C:/data/training/Loire/juin2019/classif_C3_withSS/dalles/'
+dir_ = 'C:/DATA/training/Loire/juin2019/classif_C3_withSS/dalles/'
 features_file = "Loire_20190529_C3_params_v3.txt"
 params_CC_0 = ['standard', 'SBF', 'Loire']
 
@@ -58,13 +73,16 @@ print("%i files found !" %len(list_pcx))
 
 #%% COMPUTE FEATURES
 deb = time.time()
+
 for i in list_pcx:
     print(i + " " + str(list_pcx.index(i) + 1) + "/" + str(len(list_pcx)))
     if not os.path.exists(os.path.join(dir_, "features/" + i[0:-4] + "_features.sbf")):
         computeFeatures(dir_, i, params_CC_0, os.path.join(dir_, features_file))
     print("================================")
+
 print("Time duration: %.1f sec" %(time.time()-deb))
 
+#%%
 liste_sbf = glob.glob(os.path.join(dir_, "features", "*_features.sbf"))
 query = pl.cloudcompare.open_file(params_CC_0, liste_sbf)
 pl.cloudcompare.merge_clouds(query)
@@ -75,18 +93,20 @@ pl.cloudcompare.last_file(os.path.join(dir_, "features", "*_MERGED_*.sbf.data"),
 
 print("Compute features time duration: %.1f sec" %(time.time()-deb))
 
-#%% INITIALISATION
+#%% RANDOM FOREST INITIALISATION
 dictio = pl.CC_3DMASC.load_features(
     os.path.join(dir_, "features", "PCX_all_features.sbf"),
     os.path.join(dir_, features_file),
     True)
-data = pl.calculs.featureNorm(dictio['features'])
+
 # features normalization :
 # NaN are replaced by -1 and for each feature min=0 and max=1
-#data=pl.calculs.replace_nan(dictio['features'],0)
+# data = pl.calculs.replace_nan(dictio['features'], 0)
 
-names=dictio['names']
-labels=dictio['labels']
+data = pl.calculs.featureNorm(dictio['features'])
+
+names = dictio['names']
+labels = dictio['labels']
 
 model = RandomForestClassifier(n_estimators=500, criterion='gini', max_features="auto",
                                max_depth=None, oob_score=True, n_jobs=50, verbose=1)
@@ -95,17 +115,47 @@ model = RandomForestClassifier(n_estimators=500, criterion='gini', max_features=
 NbFold = 10
 deb = time.time()
 skf = StratifiedKFold(n_splits=NbFold, shuffle=True, random_state=42)
-kappa,OA,feat_import=CrossValidation(model,skf,data,labels)
-print("CV time duration: %.1f sec" %(time.time()-deb))
-print(kappa,OA,feat_import,sep="\n")
+cohen_kappa, accuracy, feat_import = CrossValidation(model, skf, data, labels)
+print("CV time duration: %.1f sec" %(time.time() - deb))
+print(cohen_kappa, accuracy, feat_import, sep="\n")
 
 outFile = open(os.path.join(dir_, "test_CrossValidation_3.pkl"), 'wb')
-pickle.dump({"kappa":kappa, "OA":OA,"feat_import":feat_import}, outFile)
+pickle.dump({"cohen_kappa" : cohen_kappa, 
+             "accuracy" : accuracy, 
+             "feature_importances" : feat_import}, outFile)
 outFile.close()
 
 #%% TRAINING
-model.fit(data,labels)
+model.fit(data, labels)
 outFile = open(os.path.join(dir_, "Loire_Rtemus2019_C3_HR_model_v3.pkl"),"wb")
-pickle.dump(model,outFile)
+pickle.dump(model, outFile)
 outFile.close()
+
+#%% OPENCV
+rtree = cv2.ml.RTrees_create()
+n_trees = 100
+eps = 0.01
+criteria = (cv2.TERM_CRITERIA_MAX_ITER + cv2.TERM_CRITERIA_EPS, n_trees, eps)
+rtree.setTermCriteria(criteria)
+
+deb = time.time()
+rtree.train(data.astype(np.float32), cv2.ml.ROW_SAMPLE, labels.astype(np.int32))
+print("CV time duration: %.1f sec" %(time.time() - deb))
+
+_, y_hat = rtree.predict(data)
+
+#%% CloudCompare
+features = os.path.join(dir_, "features", "PCX_all_features.sbf")
+feature_sources = os.path.join(dir_, "Loire_20190529_C3_params_v3_feature_sources.txt")
+
+cc.q3dmasc_train(features, feature_sources, debug=True)
+
+
+
+
+
+
+
+
+
 
