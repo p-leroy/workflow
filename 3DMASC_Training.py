@@ -82,7 +82,7 @@ for i in list_pcx:
 
 print("Time duration: %.1f sec" %(time.time()-deb))
 
-#%%
+#%% MERGE CLOUDS WITH FEATURES
 liste_sbf = glob.glob(os.path.join(dir_, "features", "*_features.sbf"))
 query = pl.cloudcompare.open_file(params_CC_0, liste_sbf)
 pl.cloudcompare.merge_clouds(query)
@@ -93,7 +93,7 @@ pl.cloudcompare.last_file(os.path.join(dir_, "features", "*_MERGED_*.sbf.data"),
 
 print("Compute features time duration: %.1f sec" %(time.time()-deb))
 
-#%% RANDOM FOREST INITIALISATION
+#%% RANDOM FOREST INITIALISATION SCIKIT-LEARN
 dictio = pl.CC_3DMASC.load_features(
     os.path.join(dir_, "features", "PCX_all_features.sbf"),
     os.path.join(dir_, features_file),
@@ -133,16 +133,20 @@ outFile.close()
 
 #%% OPENCV
 rtree = cv2.ml.RTrees_create()
+#cv2.getNumThreads() cv2.setNumThreads()
 n_trees = 100
 eps = 0.01
+rtree.setMinSampleCount(2)
+#rtree.setMaxDepth(10)
 criteria = (cv2.TERM_CRITERIA_MAX_ITER + cv2.TERM_CRITERIA_EPS, n_trees, eps)
 rtree.setTermCriteria(criteria)
 
+data32 = data.astype(np.float32)
 deb = time.time()
-rtree.train(data.astype(np.float32), cv2.ml.ROW_SAMPLE, labels.astype(np.int32))
+rtree.train(data32, cv2.ml.ROW_SAMPLE, labels.astype(np.float32))
 print("CV time duration: %.1f sec" %(time.time() - deb))
 
-_, y_hat = rtree.predict(data)
+##_, y_hat = rtree.predict(data.astype(np.float32))
 
 #%% CloudCompare
 features = os.path.join(dir_, "features", "PCX_all_features.sbf")
