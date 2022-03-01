@@ -132,21 +132,33 @@ pickle.dump(model, outFile)
 outFile.close()
 
 #%% OPENCV
-rtree = cv2.ml.RTrees_create()
-#cv2.getNumThreads() cv2.setNumThreads()
-n_trees = 100
+n_trees = 50
 eps = 0.01
+
+rtree = cv2.ml.RTrees_create()
 rtree.setMinSampleCount(2)
 #rtree.setMaxDepth(10)
 criteria = (cv2.TERM_CRITERIA_MAX_ITER + cv2.TERM_CRITERIA_EPS, n_trees, eps)
 rtree.setTermCriteria(criteria)
 
-data32 = data.astype(np.float32)
 deb = time.time()
-rtree.train(data32, cv2.ml.ROW_SAMPLE, labels.astype(np.float32))
+rtree.train(data.astype(np.float32), cv2.ml.ROW_SAMPLE, labels.astype(np.int32))
 print("CV time duration: %.1f sec" %(time.time() - deb))
 
-##_, y_hat = rtree.predict(data.astype(np.float32))
+#%% OPENCV_MP
+rtreeMP = cv2.ml.RTrees_create()
+rtreeMP.setMinSampleCount(2)
+#rtree.setMaxDepth(10)
+criteria = (cv2.TERM_CRITERIA_MAX_ITER + cv2.TERM_CRITERIA_EPS, n_trees, eps)
+rtreeMP.setTermCriteria(criteria)
+
+deb = time.time()
+rtree.train_MP(data.astype(np.float32), cv2.ml.ROW_SAMPLE, labels.astype(np.int32))
+print("CV time duration: %.1f sec" %(time.time() - deb))
+
+
+#%% OPENCV PREDICT
+_, y_hat = rtree.predict(data.astype(np.float32))
 
 #%% CloudCompare
 features = os.path.join(dir_, "features", "PCX_all_features.sbf")
