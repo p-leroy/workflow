@@ -5,11 +5,13 @@ Created on Fri Feb 25 14:24:35 2022
 @author: PaulLeroy
 """
 
-import glob, os, time
+import glob, os, sys, time
 
 import numpy as np
 
 import cv2
+
+sys.path.append('C:/opt/plateforme_lidar')
 
 import plateforme_lidar as pl
 
@@ -37,32 +39,24 @@ data = pl.calculs.featureNorm(dictio['features'])
 names = dictio['names']
 labels = dictio['labels']
 
+#%%
+featuresBIN = os.path.join(dir_, "features.bin")
+labelsBIN = os.path.join(dir_, "labels.bin")
+data.astype(np.float32).tofile(featuresBIN)
+labels.astype(np.float32).tofile(labelsBIN)
+
+
 #%% OPENCV
 n_trees = 50
 eps = 0.01
 
-#%% 
-rtree = cv2.ml.RTrees_create()
-rtree.setMinSampleCount(2)
-#rtree.setMaxDepth(10)
-criteria = (cv2.TERM_CRITERIA_MAX_ITER + cv2.TERM_CRITERIA_EPS, n_trees, eps)
-rtree.setTermCriteria(criteria)
-
-deb = time.time()
-rtree.train(data.astype(np.float32), cv2.ml.ROW_SAMPLE, labels.astype(np.int32))
-print("CV time duration: %.1f sec" %(time.time() - deb))
-
 #%% OPENCV_MP
-rtreeMP = cv2.ml.RTrees_create()
-rtreeMP.setMinSampleCount(2)
+rtreesMP = cv2.ml.RTrees_create()
+rtreesMP.setMinSampleCount(2)
 #rtree.setMaxDepth(10)
 criteria = (cv2.TERM_CRITERIA_MAX_ITER + cv2.TERM_CRITERIA_EPS, n_trees, eps)
-rtreeMP.setTermCriteria(criteria)
+rtreesMP.setTermCriteria(criteria)
 
 deb = time.time()
-rtreeMP.train_MP(data.astype(np.float32), cv2.ml.ROW_SAMPLE, labels.astype(np.int32))
+rtreesMP.train_MP(data.astype(np.float32), cv2.ml.ROW_SAMPLE, labels.astype(np.int32))
 print("CV time duration: %.1f sec" %(time.time() - deb))
-
-
-#%% OPENCV PREDICT
-_, y_hat = rtree.predict(data.astype(np.float32))
