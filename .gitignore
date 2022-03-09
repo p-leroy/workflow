@@ -2,3 +2,5 @@
 ## Eclipse
 
 .spyproject/
+.idea/
+.ipynb_checkpoints/
