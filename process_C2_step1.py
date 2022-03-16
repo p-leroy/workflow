@@ -13,7 +13,11 @@ import os
 
 import common_ple as ple
 
-root_ = 'C:/DATA/Brioude_30092021'
+if True:
+    root_ = 'G:/RENNES1/PaulLeroy/Brioude_30092021'
+else:
+    root_ = 'C:/DATA/Brioude_30092021'
+
 traitements = os.path.join(root_, '05-Traitements', 'C2', 'denoised')
 i = os.path.join(traitements, '*.laz')
 lax = os.path.join(traitements, '*.lax')
@@ -35,7 +39,8 @@ o = 'C2.laz'
 tile_size = 500
 
 cpuCount = multiprocessing.cpu_count()
-print(f"cou_count {cpuCount}")
+print(f"cpu_count {cpuCount}")
+
 
 def create_directories():
     # create directories
@@ -45,6 +50,7 @@ def create_directories():
         os.makedirs(dir_ground)
     if not os.path.exists(dir_other):
         os.makedirs(dir_other)
+
 
 def remove(file):
     for f in glob.glob(file):

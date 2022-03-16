@@ -1,7 +1,8 @@
 # coding: utf-8
 # Baptiste Feldmann
 
-import glob, os
+import glob
+import os
 
 import numpy as np
 import simplekml
@@ -9,7 +10,12 @@ import pyproj
 from pyproj import Transformer
 
 
-dir_tiles = 'C:/DATA/Brioude_30092021/05-Traitements/C3/denoised/tiles'
+if True:
+    root_ = 'G:/RENNES1/PaulLeroy/Brioude_30092021'
+else:
+    root_ = 'C:/DATA/Brioude_30092021'
+
+dir_tiles = os.path.join(root_, '05-Traitements', 'C2', 'denoised', 'tiles')
 date = "30/09/2021"
 rootname = "Brioude"
 
@@ -46,11 +52,11 @@ for name in names:
     
         polygon = "dalle_" + "_".join(name.split("_")[coords_loc : coords_loc + 2])
         pol = plan.newpolygon(name=polygon)
-        pol.outerboundaryis = [(tmp[0][0],tmp[1][0]),
-                               (tmp[0][1],tmp[1][1]),
-                               (tmp[0][2],tmp[1][2]),
-                               (tmp[0][3],tmp[1][3]),
-                               (tmp[0][0],tmp[1][0])]
+        pol.outerboundaryis = [(tmp[0][0], tmp[1][0]),
+                               (tmp[0][1], tmp[1][1]),
+                               (tmp[0][2], tmp[1][2]),
+                               (tmp[0][3], tmp[1][3]),
+                               (tmp[0][0], tmp[1][0])]
 
         pol.style.linestyle.color = simplekml.Color.red
         pol.style.linestyle.scale = 2

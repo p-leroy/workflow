@@ -1,12 +1,13 @@
 import glob
-import multiprocessing
 import os
-
-import lastools
 
 import common_ple as ple
 
-root_ = 'C:/DATA/Brioude_30092021'
+if True:
+    root_ = 'G:/RENNES1/PaulLeroy/Brioude_30092021'
+else:
+    root_ = 'C:/DATA/Brioude_30092021'
+
 traitements = os.path.join(root_, '05-Traitements', 'C3', 'denoised')
 i = os.path.join(traitements, '*.laz')
 lax = os.path.join(traitements, '*.lax')
@@ -22,20 +23,22 @@ cores = 50
 o = 'C3.laz'
 tile_size = 500
 
-cpuCount = multiprocessing.cpu_count()
-print(f"cou_count {cpuCount}")
+cpuCount = os.cpu_count()
+print(f"cpu_count {cpuCount}")
+
 
 def create_directories():
     # create directories
     if not os.path.exists(dir_tiles):
         os.makedirs(dir_tiles)
 
+
 def remove(file):
     for f in glob.glob(file):
         os.remove(f)
 
-#%%
 
+#%%
 create_directories()
 # index las files
 ple.exe(f'lasindex -i {i} -cores {cores}')
