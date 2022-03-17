@@ -69,9 +69,9 @@ ple.exe(f'lasground -i {tiles} -step 6 -nature -extra_fine -cores {cores} -compu
 ple.exe(f'lasclassify -i {tiles_g} -cores {cores} -odix c -olaz')
 # keep only ground points (class = 2)
 ple.exe(f'las2las -i {tiles_gc} -keep_class 2 -cores {cores} -odir {dir_ground} -odix _ground -olaz')
-# keep drop ground points (class = 2)
+# drop ground points (class = 2)
 ple.exe(f'las2las -i {tiles_gc} -drop_class 2 -cores {cores} -odir {dir_other} -odix _other -olaz')
-# remove buffer (will add _1 to each tile name
+# remove buffer (will add _1 to each tile name)
 ple.exe(f'lastile -i {tiles_ground} -remove_buffer -cores {cores} -olaz')
 # remove buffer (will add _1 to each tile name)
 ple.exe(f'lastile -i {tiles_other} -remove_buffer -cores {cores} -olaz')
