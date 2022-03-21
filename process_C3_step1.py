@@ -3,7 +3,7 @@ import os
 
 import common_ple as ple
 
-if True:
+if T:
     root_ = 'G:/RENNES1/PaulLeroy/Brioude_30092021'
 else:
     root_ = 'C:/DATA/Brioude_30092021'
