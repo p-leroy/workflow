@@ -1,16 +1,20 @@
 # coding: utf-8
 # Baptiste Feldmann
-import plateforme_lidar as PL
-import numpy as np
+
 import glob, os, time, shutil
 from joblib import Parallel, delayed
+
+import numpy as np
+
+import plateforme_lidar as PL
+
 
 def corbathy_discret(filepath, data_sbet):
     offset_name = -10
     output_suffix = "_corbathy"
 
-    # open batyhmetry file
-    in_data = PL.lastools.readLAS(filepath, extraField=True)
+    # open bathymetry file
+    in_data = PL.lastools.readLAS_laspy(filepath, extraField=True)
 
     select = in_data.depth < 0.01
     data_under_water = PL.lastools.Filter_LAS(in_data, select)
@@ -29,7 +33,8 @@ def corbathy_discret(filepath, data_sbet):
     extra = [(("depth", "float32"), depth_all)]
     data_under_water.XYZ = coords_true
     data_corbathy = PL.lastools.Merge_LAS([data_under_water, data_above_water])
-    PL.lastools.writeLAS(filepath[0:offset_name] + output_suffix+".laz", data_corbathy, format_id=1, extraField=extra)
+    PL.lastools.writeLAS(filepath[0:offset_name] + output_suffix + ".laz", data_corbathy, format_id=1, extraField=extra)
+
 
 def corbathy_fwf(filepath):
     offset_name = -10
@@ -52,7 +57,7 @@ def corbathy_fwf(filepath):
     coords_true, depth_true = PL.calculs.correction3D(data_under_water.XYZ, depth_app, vectorApp=vect_app_under_water)
     
     # write results in las files
-    depth_all = np.concatenate((np.round(depth_true,decimals=2), np.array([None]*len(data_above_water))))
+    depth_all = np.concatenate((np.round(depth_true, decimals=2), np.array([None] * len(data_above_water))))
     extra=[(("depth", "float32"), depth_all)]
 
     data_under_water.XYZ = coords_true
@@ -65,6 +70,7 @@ def corbathy_fwf(filepath):
 
 
 if __name__ != '__main__':
+    # parse arguments
     import argparse
     parser = argparse.ArgumentParser(description='Correction bathy command...')
     parser.add_argument('-i', type=str)
@@ -72,11 +78,13 @@ if __name__ != '__main__':
     parser.add_argument('-fwf', action='store_true')
     parser.add_argument('-n_jobs', type=int,default=1)
     args = parser.parse_args()
+    # define parameters
     chemin = args.i
     file_sbet = args.sbet
     opt_fwf = args.fwf
     cores = args.n_jobs
 else:
+    # define parameters
     chemin = 'C:/DATA/Brioude_30092021/05-Traitements/C3_raw_bathy.laz'
     file_sbet = "params_sbet_Brioude.txt"
     opt_fwf = False
@@ -85,20 +93,20 @@ else:
 workspace, tail = os.path.split(chemin)
 
 list_path = glob.glob(chemin)
-print("[Bathymetric correction] : " + str(len(list_path)) + " files found !")
+print("[Bathymetric correction] " + str(len(list_path)) + " files found !")
 debut = time.time()
 
 if opt_fwf:
-    print("[Bathymetric correction] : FWF mode Waiting...")
+    print("[Bathymetric correction] FWF mode Waiting")
     if len(list_path) == 1:
         corbathy_fwf(chemin)
     else:
         Parallel(n_jobs=cores, verbose=1)(delayed(corbathy_fwf)(f) for f in list_path)
 else:
-    print("[Bathymetric correction] : SBET data processes, waiting...")
+    print("[Bathymetric correction] SBET data processing: start")
     sbet_config = PL.sbet.Sbet_config(os.path.join(workspace, file_sbet))
-    print("[Bathymetric correction] : SBET data processes, done !")
-    print("[Bathymetric correction] : Discrete mode Waiting...")
+    print("[Bathymetric correction] SBET data processing: done!")
+    print("[Bathymetric correction] Discrete mode")
     if len(list_path) == 1:
         corbathy_discret(chemin, sbet_config)
     else:
@@ -106,4 +114,4 @@ else:
             delayed(corbathy_discret)(f, sbet_config) for f in list_path)
 
 fin = time.time()
-print("[Bathymetric correction] : Complete in " + str(round(fin - debut, 1)) + " sec")
+print("[Bathymetric correction] Done in " + str(round(fin - debut, 1)) + " sec")
