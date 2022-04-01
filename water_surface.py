@@ -83,7 +83,7 @@ def extract_seed(cloud):
     return out
 
 
-def propagate_1deg(compared, reference, step=None):
+def propagate_1deg(compared, reference, deepness=0.2, step=None):
     # compared already contains C2C_Z, C2C and C2C_XY scalar fields
     head, tail = os.path.split(compared)
     root, ext = os.path.splitext(tail)
@@ -100,7 +100,7 @@ def propagate_1deg(compared, reference, step=None):
     cmd += ' -C2C_DIST -SPLIT_XY_z'
     cmd += ' -POP_CLOUDS'
     cmd += f' -SET_ACTIVE_SF {i_c2c_xy} -FILTER_SF 0.001 10.'  # keep closest points and avoid duplicates (i.e. xy = 0)
-    cmd += f' -SET_ACTIVE_SF {i_c2c3_z} -FILTER_SF 0.2 MAX'  # consider only points with C2 above C3
+    cmd += f' -SET_ACTIVE_SF {i_c2c3_z} -FILTER_SF {deepness} MAX'  # consider only points with C2 above C3
     cmd += f' -SF_OP_SF {i_c2c_z} DIV {i_c2c_xy}'  # compute the dip
     cmd += f' -SET_ACTIVE_SF {i_c2c_z} -FILTER_SF {-dip} {dip}'  # filter wrt dip
     cmd += f' -O {reference} -MERGE_CLOUDS' # merge new points with the previous ones
