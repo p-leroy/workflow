@@ -3,7 +3,7 @@ import os
 
 import common_ple as ple
 
-if T:
+if False:
     root_ = 'G:/RENNES1/PaulLeroy/Brioude_30092021'
 else:
     root_ = 'C:/DATA/Brioude_30092021'
@@ -12,9 +12,10 @@ traitements = os.path.join(root_, '05-Traitements', 'C3', 'denoised')
 i = os.path.join(traitements, '*.laz')
 lax = os.path.join(traitements, '*.lax')
 dir_tiles = os.path.join(traitements, 'tiles')
+dir_tiles_g = os.path.join(traitements, 'tiles_g')
 dir_tiles_ground = os.path.join(traitements, 'tiles_ground')
 tiles = os.path.join(dir_tiles, '*.laz')
-tiles_g = os.path.join(dir_tiles, '*_g.laz')
+tiles_g = os.path.join(dir_tiles_g, '*_g.laz')
 tiles_g_thin = os.path.join(dir_tiles, '*_g_thin.laz')
 tiles_g_thin_1 = os.path.join(dir_tiles, '*_g_thin_1.laz')
 out = os.path.join(root_, '05-Traitements', 'C3_ground_thin_1m.laz')
@@ -46,7 +47,7 @@ ple.exe(f'lasindex -i {i} -cores {cores}')
 # build tiles
 ple.exe(f'lastile -i {i} -tile_size {tile_size} -buffer {buffer} -cores {cores} -odir {dir_tiles} -o {o}')
 # bare-earth extraction: ground points (class = 2) and non-ground points (class = 1)
-ple.exe(f'lasground -i {tiles} -step 6 -nature -extra_fine -cores {cores} -odix _g -olaz')
+ple.exe(f'lasground -i {tiles} -step 6 -nature -extra_fine -cores {cores} -odir {dir_tiles_g} -odix _g -olaz')
 # keep only ground points (class = 2)
 ple.exe(f'las2las -i {tiles_g} -keep_class 2 -cores {cores} -odir {dir_tiles_ground} -odix _ground -olaz')
 ple.exe(f'lasthin -i {tiles_g} -keep_class 2 -step 1 -lowest -cores {cores} -odix _thin -olaz')
