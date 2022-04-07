@@ -8,7 +8,7 @@ c3_c2c = os.path.join(idir, 'C3_ground_thin_1m_C2C.bin')
 
 water_surface = os.path.join(idir, 'C2_ground_thin_1m_C2C_propagation_step_9.bin')
 
-if True:
+if False:
     bathymetry_seed = bathy.extract_seed_from_water_surface(c3_c2c, water_surface)
 else:
     bathymetry_seed = os.path.join(idir, 'C3_bathymetry_seed_from_water_surface.bin')

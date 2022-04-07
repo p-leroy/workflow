@@ -58,7 +58,7 @@ def propagate(compared, reference, deepness=-0.2, step=None):
     cmd += ' -C2C_DIST -SPLIT_XY_z'
     cmd += ' -POP_CLOUDS'
     cmd += f' -SET_ACTIVE_SF {work.i_c2c_xy} -FILTER_SF 0.001 10.'  # keep closest points, no duplicates (i.e. xy = 0)
-    cmd += f' -SET_ACTIVE_SF {work.i_c2c_z} -FILTER_SF -0.1 0.1'  # keep closest points, no duplicates (i.e. xy = 0)
+    cmd += f' -SET_ACTIVE_SF {work.i_c2c_z} -FILTER_SF -0.1 0.1'
     cmd += f' -SET_ACTIVE_SF {work.i_c2c3_z} -FILTER_SF MIN {deepness}'  # consider only points with C3 below C2
     cmd += f' -O {reference} -MERGE_CLOUDS' # merge new points with the previous ones
     cmd += f' -SAVE_CLOUDS FILE {out}'

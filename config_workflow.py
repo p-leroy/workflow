@@ -2,11 +2,16 @@ try:
     import ccConfig
     import common_ple
     cc_cmd = ccConfig.cc_ple
-    run = common_ple.exe
+
+    def custom_run(cmd):
+        return common_ple.exe(cmd, debug=True)
+    run = custom_run
+    print("[ple imports]")
 except ImportError:
     import plateforme_lidar.utils
     cc_cmd = plateforme_lidar.utils.QUERY_0['standard_view']
     run = plateforme_lidar.utils.Run
+    print("[not ple imports]")
 
 # INITIAL SCALAR FIELDS
 # 0 [Classif] Value
@@ -18,11 +23,12 @@ except ImportError:
 # 6 EdgeOfFlightLine
 # 7 ScanAngleRank
 # 8 PointSourceId
+i_intensity = 1
 
 # OTHER SCALAR FIELDS
-# 9 C2C_Z
-# 10 C2C
-# 11 C2C_XY
+# 9 C2C3_Z
+# 10 C2C3
+# 11 C2C3_XY
 # 12 Dip (degrees)
 # 13 Dip direction (degrees)
 # 14 Number of neighbors (r=5)
