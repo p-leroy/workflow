@@ -7,7 +7,10 @@ import config_workflow as work
 
 def extract_seed(cloud):
     head, tail = os.path.split(cloud)
-    out = os.path.join(head, 'C3_bathymetry_seed.bin')
+    odir = os.path.join(head, 'bathymetry')
+    if not os.path.exists(odir):
+        os.makedirs(odir)
+    out = os.path.join(odir, 'C3_bathymetry_seed.bin')
 
     cmd = work.cc_cmd
     cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT BIN -AUTO_SAVE OFF'
@@ -22,13 +25,17 @@ def extract_seed(cloud):
     return out
 
 
-def extract_seed_from_water_surface(cloud, water_surface):
-    head, tail = os.path.split(cloud)
+def extract_seed_from_water_surface(c3_cloud_with_c2c3_dist, water_surface):
+    # c3_cloud_with_c2c3_dist shall contain C2C3_Z, C2C3 and C2C3_XY scalar fields
+    head, tail = os.path.split(c3_cloud_with_c2c3_dist)
+    odir = os.path.join(head, 'bathymetry')
+    if not os.path.exists(odir):
+        os.makedirs(odir)
     out = os.path.join(head, 'C3_bathymetry_seed_from_water_surface.bin')
 
     cmd = work.cc_cmd
     cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT BIN -AUTO_SAVE OFF'
-    cmd += f' -O {cloud}'
+    cmd += f' -O {c3_cloud_with_c2c3_dist}'
     cmd += f' -O {water_surface}'
     cmd += ' -C2C_DIST -SPLIT_XY_z'
     cmd += ' -POP_CLOUDS'
@@ -41,26 +48,26 @@ def extract_seed_from_water_surface(cloud, water_surface):
     return out
 
 
-def propagate(compared, reference, deepness=-0.2, step=None):
-    # compared already contains C2C_Z, C2C and C2C_XY scalar fields
-    head, tail = os.path.split(compared)
-    root, ext = os.path.splitext(tail)
+def propagate(c3_cloud_with_c2c3_dist, current_bathymetry, deepness=-0.2, step=None):
+    # c3_cloud_with_c2c3_dist shall contain C2C3_Z, C2C3 and C2C3_XY scalar fields
+    head, tail, root, ext = work.head_tail_root_ext(c3_cloud_with_c2c3_dist)
+    odir = os.path.join(head, 'bathymetry')
     if step is not None:
-        out = os.path.join(head, root + f'_propagation_step_{step}.bin')
+        out = os.path.join(odir, root + f'_propagation_step_{step}.bin')
     else:
-        out = os.path.join(head, root + f'_propagation.bin')
+        out = os.path.join(odir, root + f'_propagation.bin')
     dip = np.tan(1. * np.pi / 180)  # dip 1 degree
 
     cmd = work.cc_cmd
     cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT BIN -AUTO_SAVE OFF'
-    cmd += f' -O {compared}'
-    cmd += f' -O {reference}'
+    cmd += f' -O {c3_cloud_with_c2c3_dist}'
+    cmd += f' -O {current_bathymetry}'
     cmd += ' -C2C_DIST -SPLIT_XY_z'
     cmd += ' -POP_CLOUDS'
     cmd += f' -SET_ACTIVE_SF {work.i_c2c_xy} -FILTER_SF 0.001 10.'  # keep closest points, no duplicates (i.e. xy = 0)
     cmd += f' -SET_ACTIVE_SF {work.i_c2c_z} -FILTER_SF -0.1 0.1'
     cmd += f' -SET_ACTIVE_SF {work.i_c2c3_z} -FILTER_SF MIN {deepness}'  # consider only points with C3 below C2
-    cmd += f' -O {reference} -MERGE_CLOUDS' # merge new points with the previous ones
+    cmd += f' -O {current_bathymetry} -MERGE_CLOUDS' # merge new points with the previous ones
     cmd += f' -SAVE_CLOUDS FILE {out}'
     work.run(cmd)
 

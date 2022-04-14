@@ -13,10 +13,8 @@ import os
 
 import common_ple as ple
 
-if False:
-    root_ = 'G:/RENNES1/PaulLeroy/Brioude_30092021'
-else:
-    root_ = 'C:/DATA/Brioude_30092021'
+#root_ = 'G:/RENNES1/PaulLeroy/Brioude_30092021'
+root_ = 'C:/DATA/Brioude_30092021'
 
 traitements = os.path.join(root_, '05-Traitements', 'C2', 'denoised')
 i = os.path.join(traitements, '*.laz')

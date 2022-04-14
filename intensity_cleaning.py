@@ -14,26 +14,27 @@ i_imax_minus_i = 8
 
 def add_sf_imax_minus_i(line):
     print('[add_sf_imax_minus_i]')
-    if not os.path.exists(line):
-        print(f'file does not exists! {line}')
+    if not work.exists(line):
         return
 
-    head, tail = os.path.split(line)
-    root, ext = os.path.splitext(tail)
-    pc_with_imax_minus_i = os.path.join(head, 'lines_i_correction', root + '_i.sbf')
-    raster = os.path.join(head, 'lines_i_correction', root + '_raster.sbf')
+    head, tail, root, ext = work.head_tail_root_ext(line)
+    odir = os.path.join(head, 'lines_i_correction')
+    if not os.path.exists(odir):
+        os.makedirs(odir)
+    pc_with_imax_minus_i = os.path.join(odir, root + '_i.sbf')
+    raster = os.path.join(odir, root + '_raster.sbf')
 
     cmd = work.cc_cmd
     cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT SBF -AUTO_SAVE OFF'
     cmd += f' -O {line}'  # open the line
     cmd += f' -SET_ACTIVE_SF {i_intensity} -FILTER_SF MIN 400.'  # filter by intensity values
     cmd += ' -RASTERIZE -GRID_STEP 1 -VERT_DIR 2 -PROJ AVG -SF_PROJ MAX -OUTPUT_CLOUD'  # compute raster
-    cmd += f' -RENAME_SF {i_intensity_in_raster} imax'  # rename intensity in the raster to Imax
-    cmd += f' -O {line}'  # re-open the line as it has been replaced by RASTERIZE + OUTPUT_CLOUD
-    cmd += f' -SET_ACTIVE_SF {i_intensity} -FILTER_SF MIN 400.'  # filter by intensity values
+    # rename the scalar field Intensity to a more convenient name for its later use: imax_minus_i
+    # note: the raster is the only open entity at this time of the process
+    cmd += f' -RENAME_SF {i_intensity_in_raster} imax_minus_i'
+    cmd += f' -O {line}'  # re-open the line as it has been replaced in memory during -RASTERIZE -OUTPUT_CLOUD
     cmd += f' -SF_INTERP {i_intensity_in_raster}'  # interpolate scalar field from the raster to the original cloud
-    cmd += f' -SF_OP_SF LAST SUB {i_intensity}'  # compute (imax - intensity), done in place i.e. replace imax
-    cmd += f' -RENAME_SF LAST imax_minus_i'
+    cmd += f' -SF_OP_SF LAST SUB {i_intensity}'  # compute (imax - intensity), done in place
     cmd += f' -SAVE_CLOUDS FILE "{raster} {pc_with_imax_minus_i}"'
 
     work.run(cmd)
@@ -66,10 +67,10 @@ def qc_check(pc_with_imax_minus_i, threshold=83, shift=103):
     print('compute and save histogram of corrected intensities')
     low = intensity[(threshold < imax_minus_i) & (imax_minus_i < 200)]
     high = intensity[(0 < imax_minus_i) & (imax_minus_i < threshold)]  - shift
-    hist_low = np.histogram(low, bins=128)
-    hist_high = np.histogram(high, bins=128)
-    plt.plot(hist_low[1][:-1], hist_low[0], '.-b', label='low intensities (not shifted)')
-    plt.plot(hist_high[1][:-1], hist_high[0], '.-r', label=f'high intensities shifted by {shift}')
+    hist_low = np.histogram(low, bins=256)
+    hist_high = np.histogram(high, bins=256)
+    plt.plot(hist_low[1][:-1], hist_low[0], '.b', label='low intensities (not shifted)')
+    plt.plot(hist_high[1][:-1], hist_high[0], '.r', label=f'high intensities shifted by {shift}')
     name = os.path.join(odir, root + '_histo_intensity_corrected')
     plt.xlabel('intensity bins')
     plt.ylabel('N')
@@ -115,14 +116,14 @@ def correct_intensities_and_add_class(pc_with_imax_minus_i, threshold=83, shift=
     cmd = work.cc_cmd
     # high intensities
     cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT SBF -AUTO_SAVE OFF'
-    cmd += f' -O {pc_with_imax_minus_i}'
+    cmd += f' -O -GLOBAL_SHIFT FIRST {pc_with_imax_minus_i}'
     cmd += f' -SET_ACTIVE_SF LAST -FILTER_SF -10 {threshold}'  # filter (Imax - intensity)
     cmd += f' -SF_OP {i_intensity} SUB {shift}'  # shift intensity values, done in place
     cmd += ' -SF_ADD_CONST intensity_class 1'
     cmd += f' -SAVE_CLOUDS FILE {high}'
     cmd += ' -CLEAR_CLOUDS'
     # low intensities
-    cmd += f' -O {pc_with_imax_minus_i}'
+    cmd += f' -O -GLOBAL_SHIFT FIRST {pc_with_imax_minus_i}'
     cmd += f' -SET_ACTIVE_SF LAST -FILTER_SF {threshold} 400'  # filter (Imax - intensity)
     cmd += ' -SF_ADD_CONST intensity_class 0'
     cmd += f' -SAVE_CLOUDS FILE {low}'

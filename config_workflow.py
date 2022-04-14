@@ -1,3 +1,6 @@
+import glob
+import os
+
 try:
     import ccConfig
     import common_ple
@@ -47,11 +50,30 @@ i_c2c = 13
 i_c2c_xy = 14
 
 
-def c2c(compared, reference):
+def exists(path):
+    if not os.path.exists(path):
+        print(f'file does not exists! {path}')
+        return False
+    else:
+        return True
+
+
+def head_tail_root_ext(path):
+    head, tail = os.path.split(path)
+    root, ext = os.path.splitext(tail)
+    return head, tail, root, ext
+
+
+def remove(files):
+    for file in glob.glob(files):
+        os.remove(file)
+
+
+def c2c_c2c3(compared, reference):
     # compute cloud to cloud distances and rename the scalar fields for further processing
     head, tail = os.path.split(compared)
     root, ext = os.path.splitext(tail)
-    out = os.path.join(head, root + '_C2C.bin')
+    out = os.path.join(head, root + '_C2C3.bin')
 
     cmd = work.cc_cmd
     cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT BIN -AUTO_SAVE OFF'
