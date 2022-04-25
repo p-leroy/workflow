@@ -102,7 +102,7 @@ def qc_check(pc_with_imax_minus_i, threshold=83, shift=103):
     print(f'   => {name}')
 
 def correct_intensities_and_add_class(pc_with_imax_minus_i, threshold=83, shift=103):
-    print('[classify_high_low_intensities]')
+    print('[correct_intensities_and_add_class]')
     if not os.path.exists(pc_with_imax_minus_i):
         print(f'file does not exists! {pc_with_imax_minus_i}')
         return

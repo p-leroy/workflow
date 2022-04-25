@@ -1,0 +1,17 @@
+C:/DATA/Brioude_30092021\05-Traitements\C3\denoised\lines_i_correction\Brioude_30092021_L01_C3_r_denoised_i_corr.laz
+C:/DATA/Brioude_30092021\05-Traitements\C3\denoised\lines_i_correction\Brioude_30092021_L02_C3_r_denoised_i_corr.laz
+C:/DATA/Brioude_30092021\05-Traitements\C3\denoised\lines_i_correction\Brioude_30092021_L03_C3_r_denoised_i_corr.laz
+C:/DATA/Brioude_30092021\05-Traitements\C3\denoised\lines_i_correction\Brioude_30092021_L04_C3_r_denoised_i_corr.laz
+C:/DATA/Brioude_30092021\05-Traitements\C3\denoised\lines_i_correction\Brioude_30092021_L05_C3_r_denoised_i_corr.laz
+C:/DATA/Brioude_30092021\05-Traitements\C3\denoised\lines_i_correction\Brioude_30092021_L06_C3_r_denoised_i_corr.laz
+C:/DATA/Brioude_30092021\05-Traitements\C3\denoised\lines_i_correction\Brioude_30092021_L07_C3_r_denoised_i_corr.laz
+C:/DATA/Brioude_30092021\05-Traitements\C3\denoised\lines_i_correction\Brioude_30092021_L08_C3_r_denoised_i_corr.laz
+C:/DATA/Brioude_30092021\05-Traitements\C3\denoised\lines_i_correction\Brioude_30092021_L09_C3_r_denoised_i_corr.laz
+C:/DATA/Brioude_30092021\05-Traitements\C3\denoised\lines_i_correction\Brioude_30092021_L10_C3_r_denoised_i_corr.laz
+C:/DATA/Brioude_30092021\05-Traitements\C3\denoised\lines_i_correction\Brioude_30092021_L11_C3_r_denoised_i_corr.laz
+C:/DATA/Brioude_30092021\05-Traitements\C3\denoised\lines_i_correction\Brioude_30092021_L12_C3_r_denoised_i_corr.laz
+C:/DATA/Brioude_30092021\05-Traitements\C3\denoised\lines_i_correction\Brioude_30092021_L13_C3_r_denoised_i_corr.laz
+C:/DATA/Brioude_30092021\05-Traitements\C3\denoised\lines_i_correction\Brioude_30092021_L14_C3_r_denoised_i_corr.laz
+C:/DATA/Brioude_30092021\05-Traitements\C3\denoised\lines_i_correction\Brioude_30092021_L15_C3_r_denoised_i_corr.laz
+C:/DATA/Brioude_30092021\05-Traitements\C3\denoised\lines_i_correction\Brioude_30092021_L16_C3_r_denoised_i_corr.laz
+C:/DATA/Brioude_30092021\05-Traitements\C3\denoised\lines_i_correction\Brioude_30092021_L17_C3_r_denoised_i_corr.laz
