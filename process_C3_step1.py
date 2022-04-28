@@ -6,7 +6,7 @@ import config_workflow as work
 #root_ = 'G:/RENNES1/PaulLeroy/Brioude_30092021'
 root_ = 'C:/DATA/Brioude_30092021'
 
-idir = os.path.join(root_, '05-Traitements', 'C3', 'denoised', 'lines_i_correction')
+idir = os.path.join(root_, '05-Traitements', 'C3_denoised_i')
 i = os.path.join(idir, '*.laz')
 lax = os.path.join(idir, '*.lax')
 dir_tiles = os.path.join(idir, 'tiles')

@@ -17,7 +17,7 @@ except ImportError:
     print("[not ple imports]")
 
 # INITIAL SCALAR FIELDS
-# 0 [Classif] Value
+# 0 [Classif] Value (added by lastools)
 # 1 Intensity
 # 2 GpsTime
 # 3 ReturnNumber
@@ -26,7 +26,6 @@ except ImportError:
 # 6 EdgeOfFlightLine
 # 7 ScanAngleRank
 # 8 PointSourceId
-i_intensity = 1
 
 # OTHER SCALAR FIELDS
 # 9 C2C3_Z
@@ -69,22 +68,40 @@ def remove(files):
         os.remove(file)
 
 
-def c2c_c2c3(compared, reference):
+def get_shift(config):
+    # the shift comes from
+    # 1) the intensity correction, i.e. imax_minus_i and intensity_class SF have been added
+    # 2) the classification field added by lastools
+    if config == 'i_corr_classified':
+        shift = 2
+    elif config == 'i_corr_not_classified':
+        shift = 1
+    elif config == 'not_classified':
+        shift = -1
+    else:
+        print(f'[get_shift] config unknown: {config}')
+        shift = None
+    return shift
+
+
+def c2c_c2c3(compared, reference, config):
     # compute cloud to cloud distances and rename the scalar fields for further processing
     head, tail = os.path.split(compared)
     root, ext = os.path.splitext(tail)
     out = os.path.join(head, root + '_C2C3.bin')
 
-    cmd = work.cc_cmd
+    shift = get_shift(config)
+
+    cmd = cc_cmd
     cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT BIN -AUTO_SAVE OFF'
     cmd += f' -O {compared}'
     cmd += f' -O {reference}'
     cmd += ' -C2C_DIST -SPLIT_XY_Z'
     cmd += ' -POP_CLOUDS'
-    cmd += f' -RENAME_SF {work.i_c2c3_z} C2C3_Z'
-    cmd += f' -RENAME_SF {work.i_c2c3} C2C3'
-    cmd += f' -RENAME_SF {work.i_c2c3_xy} C2C3_XY'
+    cmd += f' -RENAME_SF {i_c2c3_z + shift} C2C3_Z'
+    cmd += f' -RENAME_SF {i_c2c3 + shift} C2C3'
+    cmd += f' -RENAME_SF {i_c2c3_xy + shift} C2C3_XY'
     cmd += f' -SAVE_CLOUDS FILE {out}'
-    work.run(cmd)
+    run(cmd)
 
     return out

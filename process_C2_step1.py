@@ -16,7 +16,7 @@ import common_ple as ple
 #root_ = 'G:/RENNES1/PaulLeroy/Brioude_30092021'
 root_ = 'C:/DATA/Brioude_30092021'
 
-traitements = os.path.join(root_, '05-Traitements', 'C2', 'denoised')
+traitements = os.path.join(root_, '05-Traitements', 'C2_denoised')
 i = os.path.join(traitements, '*.laz')
 lax = os.path.join(traitements, '*.lax')
 dir_tiles = os.path.join(traitements, 'tiles')
