@@ -19,5 +19,6 @@ bathymetry_seed = os.path.join(idir, 'bathymetry', 'C3_bathymetry_seed_from_wate
 #%%
 step = 0
 bathymetry = bathy.propagate(c3_c2c3, bathymetry_seed, c3_config, step=step)
-for step in range(step + 1, step + 10):
+for step in range(step + 1, step + 20):
     bathymetry = bathy.propagate(c3_c2c3, bathymetry, c3_config, step=step)
+

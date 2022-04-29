@@ -21,7 +21,7 @@ def extract_seed_from_water_surface(c3_cloud_with_c2c3_dist, water_surface, conf
     cmd += f' -O {water_surface}'
     cmd += ' -C2C_DIST -SPLIT_XY_z'
     cmd += ' -POP_CLOUDS'
-    #cmd += f' -SET_ACTIVE_SF {work.i_c2c_xy + shift} -FILTER_SF 0 5.'
+    cmd += f' -SET_ACTIVE_SF {work.i_c2c_xy + shift} -FILTER_SF 0 5.'
     cmd += f' -SET_ACTIVE_SF {work.i_c2c_z + shift} -FILTER_SF MIN -0.2'
     cmd += f' -SET_ACTIVE_SF {work.i_c2c3_z + shift} -FILTER_SF MIN -0.2'
     cmd += f' -SAVE_CLOUDS FILE {out}'

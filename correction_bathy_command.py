@@ -9,14 +9,14 @@ import numpy as np
 import plateforme_lidar as PL
 
 
-def corbathy_discret(filepath, data_sbet):
+def refraction_correction(filepath, data_sbet, minimum_depth=0.01):
     offset_name = -10
     output_suffix = "_corbathy"
 
     # open bathymetry file
     in_data = PL.lastools.readLAS_laspy(filepath, extraField=True)
 
-    select = in_data.depth < 0.01
+    select = in_data.depth < minimum_depth
     data_under_water = PL.lastools.Filter_LAS(in_data, select)
     data_above_water = PL.lastools.Filter_LAS(in_data, np.logical_not(select))
     del in_data
@@ -108,10 +108,10 @@ else:
     print("[Bathymetric correction] SBET data processing: done!")
     print("[Bathymetric correction] Discrete mode")
     if len(list_path) == 1:
-        corbathy_discret(chemin, sbet_config)
+        refraction_correction(chemin, sbet_config)
     else:
         Parallel(n_jobs=cores, verbose=1)(
-            delayed(corbathy_discret)(f, sbet_config) for f in list_path)
+            delayed(refraction_correction)(f, sbet_config) for f in list_path)
 
 fin = time.time()
 print("[Bathymetric correction] Done in " + str(round(fin - debut, 1)) + " sec")
