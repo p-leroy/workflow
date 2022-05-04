@@ -18,7 +18,7 @@ def refraction_correction(filepath, data_sbet, minimum_depth=0.01):
     output_suffix = "_corbathy"
 
     # open bathymetry file
-    in_data = pl.lastools.readLAS_laspy(filepath, extraField=True)
+    in_data = pl.lastools.readLAS(filepath, extraField=True)
 
     select = in_data.depth < minimum_depth
     data_under_water = pl.lastools.Filter_LAS(in_data, select)
@@ -44,7 +44,7 @@ def refraction_correction_fwf(filepath):
     offset_name = -10
     output_suffix = "_corbathy"
     # open bathymetry file
-    in_data = pl.lastools.readLAS_laspy(filepath, True)
+    in_data = pl.lastools.readLAS(filepath, True)
 
     vect_app = np.vstack([in_data.x_t,in_data.y_t,in_data.z_t]).transpose()
     vect_true_all = pl.calculs.correction_vect(vect_app)
@@ -80,7 +80,7 @@ def do_work(input, sbet, n_jobs, fwf=False):
     start = time.time()
 
     if fwf:
-        print("[Refraction correction] full waveform mode...")
+        print("[Refraction correction] full waveform mode")
         if len(list_path) == 1:
             refraction_correction_fwf(input)
         else:
