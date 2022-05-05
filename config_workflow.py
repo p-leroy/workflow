@@ -1,5 +1,9 @@
 import glob
+import logging
 import os
+
+logger = logging.getLogger(__name__)
+logging.basicConfig()
 
 try:
     import ccConfig
@@ -9,12 +13,12 @@ try:
     def custom_run(cmd):
         return common_ple.exe(cmd, debug=True)
     run = custom_run
-    print("[ple imports]")
+    logger.info("[ple imports]")
 except ImportError:
     import plateforme_lidar.utils
     cc_cmd = plateforme_lidar.utils.QUERY_0['standard_view']
     run = plateforme_lidar.utils.Run
-    print("[not ple imports]")
+    logger.info("[not ple imports]")
 
 # INITIAL SCALAR FIELDS
 # 0 [Classif] Value (added by lastools)

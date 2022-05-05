@@ -13,7 +13,11 @@ import numpy as np
 import plateforme_lidar as pl
 
 
-def refraction_correction(filepath, data_sbet, minimum_depth=0.01):
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+
+def refraction_correction(filepath, sbet, minimum_depth=0.01):
     offset_name = -10
     output_suffix = "_corbathy"
 
@@ -24,12 +28,11 @@ def refraction_correction(filepath, data_sbet, minimum_depth=0.01):
     data_under_water = pl.lastools.Filter_LAS(in_data, select)
     data_above_water = pl.lastools.Filter_LAS(in_data, np.logical_not(select))
     del in_data
-    
+
+    # compute new positions
     gps_time = data_under_water.gps_time
     depth_app = data_under_water.depth
-    
-    # compute new positions
-    data_interp = pl.sbet.interpolate(data_sbet[0], data_sbet[1], gps_time)
+    data_interp = pl.sbet.interpolate(sbet[0], sbet[1], gps_time)
     coords_true, depth_true = pl.calculs.correction3D(data_under_water.XYZ, depth_app, data_interp[:, 0:3])
     
     # write results in las files
@@ -46,18 +49,18 @@ def refraction_correction_fwf(filepath):
     # open bathymetry file
     in_data = pl.lastools.readLAS(filepath, True)
 
-    vect_app = np.vstack([in_data.x_t,in_data.y_t,in_data.z_t]).transpose()
+    vect_app = np.vstack([in_data.x_t, in_data.y_t, in_data.z_t]).transpose()
     vect_true_all = pl.calculs.correction_vect(vect_app)
-    in_data.x_t, in_data.y_t, in_data.z_t = vect_true_all[:,0], vect_true_all[:,1], vect_true_all[:,2]
+    in_data.x_t, in_data.y_t, in_data.z_t = vect_true_all[:, 0], vect_true_all[:, 1], vect_true_all[:, 2]
     
-    select = in_data.depth<0.01
+    select = in_data.depth < 0.01
     data_under_water = pl.lastools.Filter_LAS(in_data, select)
     data_above_water = pl.lastools.Filter_LAS(in_data, np.logical_not(select))
     vect_app_under_water = vect_app[select]
     del in_data
 
-    depth_app = data_under_water.depth
     # compute new positions
+    depth_app = data_under_water.depth
     coords_true, depth_true = pl.calculs.correction3D(data_under_water.XYZ, depth_app, vectorApp=vect_app_under_water)
     
     # write results in las files
@@ -76,20 +79,20 @@ def refraction_correction_fwf(filepath):
 def do_work(input, sbet, n_jobs, fwf=False):
     head, tail = os.path.split(input)
     list_path = glob.glob(input)
-    print("[Refraction correction] " + str(len(list_path)) + " files found")
+    logger.info("[Refraction correction] " + str(len(list_path)) + " files found")
     start = time.time()
 
     if fwf:
-        print("[Refraction correction] full waveform mode")
+        logger.info("[Refraction correction] full waveform mode")
         if len(list_path) == 1:
             refraction_correction_fwf(input)
         else:
             Parallel(n_jobs=n_jobs, verbose=1)(delayed(refraction_correction_fwf)(f) for f in list_path)
     else:
-        print("[Refraction correction] SBET data processing: start")
+        logger.info("[Refraction correction] SBET data processing: start")
         sbet_config = pl.sbet.Sbet_config(os.path.join(head, sbet))
-        print("[Refraction correction] SBET data processing: done")
-        print("[Refraction correction] normal mode")
+        logger.info("[Refraction correction] SBET data processing: done")
+        logger.info("[Refraction correction] normal mode")
         if len(list_path) == 1:
             refraction_correction(input, sbet_config)
         else:
@@ -97,7 +100,7 @@ def do_work(input, sbet, n_jobs, fwf=False):
                 delayed(refraction_correction)(f, sbet_config) for f in list_path)
 
     stop = time.time()
-    print("[Refraction correction] done in " + str(round(stop - start, 1)) + " sec")
+    logger.info("[Refraction correction] done in " + str(round(stop - start, 1)) + " sec")
 
 
 if __name__ == '__main__':

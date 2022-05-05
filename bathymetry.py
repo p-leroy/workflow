@@ -9,8 +9,7 @@ def extract_seed_from_water_surface(c3_cloud_with_c2c3_dist, water_surface, conf
     # c3_cloud_with_c2c3_dist shall contain C2C3_Z, C2C3 and C2C3_XY scalar fields
     head, tail, root, ext = work.head_tail_root_ext(c3_cloud_with_c2c3_dist)
     odir = os.path.join(head, 'bathymetry')
-    if not os.path.exists(odir):
-        os.makedirs(odir)
+    os.makedirs(odir, exist_ok=True)
     out = os.path.join(odir, root + f'_bathymetry_seed.bin')
 
     shift = work.get_shift(config)
@@ -19,7 +18,7 @@ def extract_seed_from_water_surface(c3_cloud_with_c2c3_dist, water_surface, conf
     cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT BIN -AUTO_SAVE OFF'
     cmd += f' -O {c3_cloud_with_c2c3_dist}'
     cmd += f' -O {water_surface}'
-    cmd += ' -C2C_DIST -SPLIT_XY_z'
+    cmd += ' -C2C_DIST -SPLIT_XY_Z'
     cmd += ' -POP_CLOUDS'
     cmd += f' -SET_ACTIVE_SF {work.i_c2c_xy + shift} -FILTER_SF 0 5.'
     cmd += f' -SET_ACTIVE_SF {work.i_c2c_z + shift} -FILTER_SF MIN -0.2'
@@ -46,7 +45,7 @@ def propagate(c3_cloud_with_c2c3_dist, current_bathymetry, config, deepness=-0.2
     cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT BIN -AUTO_SAVE OFF'
     cmd += f' -O {c3_cloud_with_c2c3_dist}'
     cmd += f' -O {current_bathymetry}'
-    cmd += ' -C2C_DIST -SPLIT_XY_z'
+    cmd += ' -C2C_DIST -SPLIT_XY_Z'
     cmd += ' -POP_CLOUDS'
     cmd += f' -SET_ACTIVE_SF {work.i_c2c_xy + shift} -FILTER_SF 0.001 10.'  # keep closest points, no duplicates (i.e. xy = 0)
     cmd += f' -SET_ACTIVE_SF {work.i_c2c_z + shift} -FILTER_SF -0.1 0.1'
@@ -56,3 +55,41 @@ def propagate(c3_cloud_with_c2c3_dist, current_bathymetry, config, deepness=-0.2
     work.run(cmd)
 
     return out
+
+
+def get_bathymetry_hd(line, water_surface, i_c2c_z):
+
+    head, tail, root, ext = work.head_tail_root_ext(line)
+    odir = os.path.join(head, 'processing')
+    os.makedirs(odir, exist_ok=True)
+    out = os.path.join(odir, 'C3_bathymetry_hd.bin')
+
+    cmd = work.cc_cmd
+    cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT BIN -AUTO_SAVE OFF'
+    cmd += f' -O -GLOBAL_SHIFT FIRST {line}'
+    cmd += f' -O -GLOBAL_SHIFT FIRST {water_surface}'
+    cmd += ' -C2C_DIST -MAX_DIST 100 -SPLIT_XY_Z'
+    cmd += ' -POP_CLOUDS'  # remove water_surface from the database
+    cmd += f' -SET_ACTIVE_SF {i_c2c_z} -FILTER_SF MIN -0.2'  # Z keep points which are below the water surface
+    cmd += f' -SET_ACTIVE_SF {i_c2c_z + 2} -FILTER_SF MIN 10'  # XY keep points which are close to the water surface
+    if os.path.exists(out):
+        cmd += f' -O {out} -MERGE_CLOUDS'  # merge new points with the previous ones
+    cmd += f' -SAVE_CLOUDS FILE {out}'
+    work.run(cmd)
+
+    return out
+
+
+def get_bottom_hd(line, water_surface, bottom_thin):
+
+    cmd = work.cc_cmd
+    cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT BIN -AUTO_SAVE OFF'
+    cmd += f' -O {line}'
+    cmd += f' -O {water_surface}'
+    cmd += ' -C2C_DIST -SPLIT_XY_Z'
+    cmd += ' -POP_CLOUDS'
+    pass
+
+
+def get_patches_hd():
+    pass
