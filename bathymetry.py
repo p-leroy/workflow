@@ -1,8 +1,12 @@
+import logging
 import os
 
 import numpy as np
 
 import config_workflow as work
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def extract_seed_from_water_surface(c3_cloud_with_c2c3_dist, water_surface, config):
@@ -57,17 +61,21 @@ def propagate(c3_cloud_with_c2c3_dist, current_bathymetry, config, deepness=-0.2
     return out
 
 
-def get_bathymetry_hd(line, water_surface, i_c2c_z):
+def get_bathymetry_hd(line, water_surface, i_c2c_z, globalShift):
+
+    logger.info(f'processing line {line}')
 
     head, tail, root, ext = work.head_tail_root_ext(line)
     odir = os.path.join(head, 'processing')
     os.makedirs(odir, exist_ok=True)
     out = os.path.join(odir, 'C3_bathymetry_hd.bin')
 
+    x, y, z = globalShift
+
     cmd = work.cc_cmd
     cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT BIN -AUTO_SAVE OFF'
-    cmd += f' -O -GLOBAL_SHIFT FIRST {line}'
-    cmd += f' -O -GLOBAL_SHIFT FIRST {water_surface}'
+    cmd += f' -O -GLOBAL_SHIFT {x} {y} {z} {line}'
+    cmd += f' -O -GLOBAL_SHIFT {x} {y} {z} {water_surface}'
     cmd += ' -C2C_DIST -MAX_DIST 100 -SPLIT_XY_Z'
     cmd += ' -POP_CLOUDS'  # remove water_surface from the database
     cmd += f' -SET_ACTIVE_SF {i_c2c_z} -FILTER_SF MIN -0.2'  # Z keep points which are below the water surface
@@ -80,12 +88,12 @@ def get_bathymetry_hd(line, water_surface, i_c2c_z):
     return out
 
 
-def get_bottom_hd(line, water_surface, bottom_thin):
+def get_bottom_hd(bathymetry_hd, bathymetry):
 
     cmd = work.cc_cmd
     cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT BIN -AUTO_SAVE OFF'
-    cmd += f' -O {line}'
-    cmd += f' -O {water_surface}'
+    cmd += f' -O -GLOBAL_SHIFT FIRST {bathymetry_hd}'  # compared
+    cmd += f' -O -GLOBAL_SHIFT FIRST {bathymetry}'  # reference
     cmd += ' -C2C_DIST -SPLIT_XY_Z'
     cmd += ' -POP_CLOUDS'
     pass
