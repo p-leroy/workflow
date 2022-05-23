@@ -7,7 +7,7 @@ lines_dir = os.path.join(idir, 'C3_denoised_i')
 # water surface
 water_surface = os.path.join(idir, 'water_surface_merged_withDepth_20220505.las')
 # bathymetry thin
-bathymetry_thin = os.path.join(idir, 'bathy_cleaned_classified_20220506.las')
+bathymetry_thin = os.path.join(idir, 'bathy_cleaned_classified_15_16.las')
 
 lasClassified = False
 

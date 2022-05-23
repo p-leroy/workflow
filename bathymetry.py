@@ -54,14 +54,14 @@ def propagate(c3_cloud_with_c2c3_dist, current_bathymetry, config, deepness=-0.2
     cmd += f' -SET_ACTIVE_SF {work.i_c2c_xy + shift} -FILTER_SF 0.001 10.'  # keep closest points, no duplicates (i.e. xy = 0)
     cmd += f' -SET_ACTIVE_SF {work.i_c2c_z + shift} -FILTER_SF -0.1 0.1'
     cmd += f' -SET_ACTIVE_SF {work.i_c2c3_z + shift} -FILTER_SF MIN {deepness}'  # consider only points with C3 below C2
-    cmd += f' -O {current_bathymetry} -MERGE_CLOUDS' # merge new points with the previous ones
+    cmd += f' -O {current_bathymetry} -MERGE_CLOUDS'  # merge new points with the previous ones
     cmd += f' -SAVE_CLOUDS FILE {out}'
     work.run(cmd)
 
     return out
 
 
-def get_bathymetry_hd(line, water_surface, i_c2c_z, globalShift):
+def get_bathymetry_hd(line, water_surface, i_c2c_z, global_shift):
 
     logger.info(f'processing line {line}')
 
@@ -70,7 +70,7 @@ def get_bathymetry_hd(line, water_surface, i_c2c_z, globalShift):
     os.makedirs(odir, exist_ok=True)
     out = os.path.join(odir, 'C3_bathymetry_hd.bin')
 
-    x, y, z = globalShift
+    x, y, z = global_shift
 
     cmd = work.cc_cmd
     cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT BIN -AUTO_SAVE OFF'
