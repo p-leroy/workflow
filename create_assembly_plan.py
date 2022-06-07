@@ -5,7 +5,6 @@ import glob
 import os
 
 import numpy as np
-import pyproj
 from pyproj import Transformer
 import simplekml
 
