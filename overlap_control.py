@@ -8,6 +8,7 @@ import numpy as np
 from joblib import Parallel,delayed
 
 import plateforme_lidar as pl
+import cc
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -95,53 +96,59 @@ class Overlap(object):
                     file_core_pts = file_a[0:-4] + "_thin.laz"
                     for num_b in self.overlapping_pairs[num_a]:
                         file_b = self._get_name_from_line_number(num_b)
-                        file_result = file_core_pts[0:-4] + "_m3c2_" + num_a + "and" + num_b + ".laz"
+                        file_result = file_core_pts[0:-4] + "_m3c2_" + num_a + "and" + num_b + ".sbf"
                         self.file_list += [[file_a, file_b, file_core_pts, file_result]]
                         self.pair_list += [num_a + "_" + num_b]
             else:
                 raise ValueError("Overlapping pairs dictionary is empty")
 
         elif self.folder == "C3":  # *** C3 *** #
-            c3_thin_files = glob.glob(os.path.join(self.lines_dir, "*_thin.laz"))
-            octree_lvl = 10
-            nbr_job = 10
+            # # compute distances between C3 thin data and the water surface => *_thin_C2C.laz
+            # c3_thin_files = glob.glob(os.path.join(self.lines_dir, "*_thin.laz"))
+            # octree_lvl = 10
+            # nbr_job = 10
             # pl.cloudcompare.c2c_files(self.cc_options,
             #                           c3_thin_files,
             #                           self.water_surface,
             #                           octree_lvl=octree_lvl,
             #                           nbr_job=nbr_job)
-
-            thin_c2c_files = glob.glob(os.path.join(self.lines_dir, "*_thin_C2C.laz"))
-            Parallel(n_jobs=20, verbose=1)(
-                delayed(self._filtering_c2c)(file, file[0:-8] + "_1.laz")
-                for file in thin_c2c_files
-            )
-
-            for file in glob.glob(os.path.join(self.lines_dir, "*_C2C.laz")):
-                os.remove(file)
+            #
+            # # keep only points which are far from the water surface
+            # # *_thin_C2C.laz files are created at the end of the previous command
+            # thin_c2c_files = glob.glob(os.path.join(self.lines_dir, "*_thin_C2C.laz"))
+            # Parallel(n_jobs=20, verbose=1)(
+            #     delayed(self._filtering_c2c)(file, file[0:-8] + "_core.laz")
+            #     for file in thin_c2c_files
+            # )
+            #
+            # for file in glob.glob(os.path.join(self.lines_dir, "*_C2C.laz")):
+            #     os.remove(file)
 
             self._set_overlapping_pairs(pattern="*_thin.laz")
             if self.overlapping_pairs is {}:
                 raise ValueError("Overlapping pairs dictionary is empty")
             for num_a in self.overlapping_pairs.keys():
                 file_a = self._get_name_from_line_number(num_a)
-                file_core_pts =  file_a[0:-4] + "_thin.laz"
+                file_core_pts =  file_a[0:-4] + "_thin_core.laz"
                 for num_b in self.overlapping_pairs[num_a]:
                     file_b = self._get_name_from_line_number(num_b)
-                    file_result = file_core_pts[0:-4] + "_m3c2_" + num_a + "and" + num_b + ".laz"
+                    file_result = file_core_pts[0:-4] + "_m3c2_" + num_a + "and" + num_b + ".sbf"
                     self.file_list += [[file_a, file_b, file_core_pts, file_result]]
                     self.pair_list += [num_a + "_" + num_b]
 
         elif self.folder == "C2_C3":  # *** C2_C3 *** #
-            # c2_thin_files = glob.glob(os.path.join(self.lines_dir, "*_thin.laz"))
-            # octree_lvl = 10
-            # nbr_job = 10
+            # compute distances between C2 thin data and the water surface => *_thin_C2C.laz
+            c2_thin_files = glob.glob(os.path.join(self.lines_dir, "*_thin.laz"))
+            octree_lvl = 10
+            nbr_job = 10
             # pl.cloudcompare.c2c_files(self.cc_options,
             #                           c2_thin_files,
             #                           self.water_surface,
             #                           octree_lvl=octree_lvl,
             #                           nbr_job=nbr_job)
             #
+            # # keep only points which are far from the water surface
+            # # *_thin_C2C.laz files are created at the end of the previous command
             # thin_c2c_files = glob.glob(os.path.join(self.lines_dir, "*_thin_C2C.laz"))
             # Parallel(n_jobs=20, verbose=1)(
             #     delayed(self._filtering_c2c)(file, file[0:-8] + "_core.laz")
@@ -154,9 +161,10 @@ class Overlap(object):
             for file_core in thin_core_files:
                 file_a = file_core[0:-14] + '.laz'
                 file_b = file_core[0:-17] + c3_pattern
-                file_result = file_core[0:-4] + "_m3c2_C2C3.laz"
+                file_result = file_core[0:-4] + "_m3c2_C2C3.sbf"
                 self.file_list += [[file_a, file_b, file_core, file_result]]
-                self.pair_list += file_core
+                head, tail = os.path.split(file_core)
+                self.pair_list += [tail[self.root_length:self.root_length + self.line_nb_digits]]
 
         else:
             raise OSError("Unknown folder")
@@ -168,65 +176,99 @@ class Overlap(object):
 
     def processing(self):
         if self._preprocessingStatus:
-            for i in range(0, len(self.file_list)):
-                print("[Overlap.processing] Measure distances between lines with M3C2: " + self.pair_list[i])
-                self.measure_distances_with_m3c2(*self.file_list[i])
+            # for i in range(0, len(self.file_list)):
+            #     print("[Overlap.processing] Measure distances between lines with M3C2: " + self.pair_list[i])
+            #     self.measure_distances_with_m3c2(*self.file_list[i])
                     
-            print("[Overlap.processing] M3C2 analyzes")
+            print("[Overlap.processing] filter M3C2 results and compute statistics (mean, standard deviation)")
             self.results = Parallel(n_jobs=25, verbose=1)(
-                delayed(self.filter_m3c2_data)(
+                delayed(self.filter_m3c2_data_sbf)(
                     os.path.join(self.lines_dir, elem[-1]), self.pair_list[count])
                 for count, elem in enumerate(self.file_list)
             )
-            np.savetxt(os.path.join(self.lines_dir, "save_results.txt"), self.results,
+            np.savetxt(os.path.join(self.lines_dir, "m3c2_mean_std.txt"), self.results,
                        fmt='%s', delimiter=';', header='Comparaison;moyenne (m);ecart-type (m)')
+
+            cleaned_m3c2_results = glob.glob(os.path.join(self.lines_dir, '*_clean.sbf'))
+            overlap_control_src = cc.merge(cleaned_m3c2_results, export_fmt='sbf')
+            overlap_control_dst = os.path.join(self.workspace, f'{self.folder}_overlap_control.sbf')
+            os.rename(overlap_control_src, overlap_control_dst)
+            os.rename(overlap_control_src + '.data', overlap_control_dst + '.data')
+            print(f"[Overlap.processing] results merged in {overlap_control_dst}")
+
             print("[Overlap.processing] M3C2 analyzes done")
         else:
             raise OSError("[Overlap.processing] Preprocessing not done!")
 
     def measure_distances_with_m3c2(self, line_a, line_b, core_pts, out):
         path_a = os.path.join(self.lines_dir, line_a)
+        print(f'Cloud 1: {path_a}')
         # do the files exist?
         if not os.path.exists(path_a):
             raise FileNotFoundError
         path_b = os.path.join(self.lines_dir, line_b)
+        print(f'Cloud 2: {path_b}')
         if not os.path.exists(path_b):
             raise FileNotFoundError
         path_core_pts = os.path.join(self.lines_dir, core_pts)
+        print(f'Core points: {path_core_pts}')
         if not os.path.exists(path_core_pts):
             raise FileNotFoundError
         m3c2_params = os.path.join(self.lines_dir, self.m3c2_file)
+        print(f'M3C2 parameters: {m3c2_params}')
         if not os.path.exists(m3c2_params):
             raise FileNotFoundError
 
-        query = pl.cloudcompare.open_file(self.cc_options, [path_a, path_b, path_core_pts])
+        cc_options = [self.cc_options[0], 'SBF_auto_save', self.cc_options[-1]]
+        query = pl.cloudcompare.open_file(cc_options, [path_a, path_b, path_core_pts])
         pl.cloudcompare.m3c2(query, m3c2_params)
         root, ext = os.path.splitext(path_a)
-        m3c2_expected_out = root + '_M3C2.laz'
+        expected_sbf = root + '_M3C2.sbf'
         head, tail = os.path.split(path_a)
-        dst = os.path.join(head, out)
-        if os.path.exists(dst):
-            os.remove(dst)
-            print(f'[Overlap.measure_distances_with_m3c2] remove {dst}')
+        out_sbf = os.path.join(head, out)
+        if os.path.exists(out_sbf):
+            os.remove(out_sbf)
+            os.remove(out_sbf + ".data")
+            print(f'[Overlap.measure_distances_with_m3c2] remove {out_sbf}')
         try:
-            os.rename(m3c2_expected_out, dst)
-            print(f'{m3c2_expected_out} renamed to {out}')
+            os.rename(expected_sbf, out_sbf)
+            os.rename(expected_sbf + '.data', out_sbf + '.data')
+            print(f'{expected_sbf} (.sbf.data also) renamed to {out} ')
         except OSError as error:
             print(error)
 
-    def filter_m3c2_data(self, filepath, compare_id):
-        # filter distance uncertainty
-        in_data = pl.lastools.ReadLAS(filepath, extraField=True)
-        selection = ~(np.isnan(in_data["distance__uncertainty"]))
-        in_data2 = pl.lastools.Filter_LAS(in_data, selection)
-        selection = in_data2["distance__uncertainty"] < self.max_uncertainty
-        in_data3 = pl.lastools.Filter_LAS(in_data2, selection)
-        # filter M3C2 distance
-        selection = ~(np.isnan(in_data3['m3c2__distance']))
-        m3c2_dist = in_data3['m3c2__distance'][selection]
+    def filter_m3c2_data_sbf(self, filepath, compare_id):
+        print(f'[Overlap.filter_m3c2_data_sbf] {filepath} [{compare_id}]')
+        pc, sf, config = cc.read_sbf(filepath)
 
+        # SF1 = Npoints_cloud1
+        # SF2 = Npoints_cloud2
+        # SF3 = STD_cloud1
+        # SF4 = STD_cloud2
+        # SF5 = significant change
+        # SF6 = distance uncertainty
+        # SF7 = M3C2 distance
+
+        uncertainty = sf[:, 5]
+        distance = sf[:, 6]
+
+        # filter distance uncertainty
+        selection = ~(np.isnan(uncertainty))
+        selection &= (uncertainty < self.max_uncertainty)
+
+        # filter m3c2 distance
+        selection &= ~(np.isnan(distance))
+
+        # compute statistics on the selected M3C2 distances (mean, standard deviation)
+        m3c2_dist = distance[selection]
         if len(m3c2_dist) > 100:
             output = [compare_id, np.round(np.mean(m3c2_dist), 3), np.round(np.std(m3c2_dist), 3)]
         else:
             output = [compare_id, "NotEnoughPoints", "-"]
+
+        # save filtered data => *_clean.sbf
+        root, ext = os.path.splitext(filepath)
+        out = root + '_clean.sbf'
+        cc.write_sbf(out, pc[selection, :], sf[selection, :], config)
+
         return output

@@ -127,18 +127,18 @@ class Overlap(object):
         extra_fields = [key for key in data.metadata['extraField']]
 
         try:  # filter distance uncertainty
-            select = data["distance__uncertainty"] < self.max_uncertainty
+            selection = data["distance__uncertainty"] < self.max_uncertainty
         except KeyError:
             raise KeyError(f"distance__uncertainty is not in the extra_fields list: {extra_fields}")
 
         try:  # filter m3c2 distance
-            select &= data["m3c2__distance"] < self.max_dist
-            select &= data["m3c2__distance"] > -self.max_dist
-            selected_data = pl.lastools.Filter_LAS(data, select)
+            selection &= (data["m3c2__distance"] < self.max_dist)
+            selection &= (data["m3c2__distance"] > -self.max_dist)
         except KeyError:
             raise KeyError(f"m3c2__distance is not in the extra_fields list: {extra_fields}")
 
+        # save filtered data => *_clean.laz
+        selected_data = pl.lastools.Filter_LAS(data, selection)
         extra = [(("m3c2_distance", "float32"), selected_data["m3c2__distance"]),
                  (("distance_uncertainty", "float32"), selected_data["distance__uncertainty"])]
-
         pl.lastools.WriteLAS(filepath[0:-4] + "_clean.laz", selected_data, extraFields=extra)

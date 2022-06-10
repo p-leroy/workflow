@@ -1,12 +1,12 @@
 # coding: utf-8
-# Baptiste Feldmann
+# Paul Leroy, Baptiste Feldmann
 
 import glob, logging, os
 
 import numpy as np
 import pyproj
-from sklearn.decomposition import PCA
 import simplekml
+from sklearn.decomposition import PCA
 
 import plateforme_lidar as pl
 
@@ -68,7 +68,7 @@ def from_lines(lines, odir, epsg_src="epsg:2154", epsg_dst="epsg:4171"):
     logger.info(f'source EPSG {epsg_src}, destination EPSG {epsg_dst}')
     for line in lines:
         print(line)
-        data = pl.lastools.readLAS(line)
+        data = pl.lastools.ReadLAS(line)
         pca_pts = PCA(n_components=2, svd_solver='full')
         data_new = pca_pts.fit_transform(data.XYZ[:, 0:2])
         boundaries = np.array([[min(data_new[:, 0]), min(data_new[:, 1])],
