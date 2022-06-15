@@ -34,13 +34,13 @@ def classify(workspace, filename, model, features_file):
     labels_pred = model.predict(data)
     confid_pred = model.predict_proba(data)
     confid_pred = np.max(confid_pred,axis=1)
-    lasdata = pl.lastools.readLAS(workspace + filename)
+    lasdata = pl.lastools.ReadLAS(workspace + filename)
     
     lasdata.classification = labels_pred
     #print(np.shape(lasdata))
     #print(np.shape(data))
     extra = [(("ind_confid","float32"), np.round(confid_pred * 100, decimals=1))]
-    pl.lastools.writeLAS(workspace + filename[0:-4] + "_class.laz",
+    pl.lastools.WriteLAS(workspace + filename[0:-4] + "_class.laz",
                          lasdata, format_id=1, extraField=extra)
 
 workspace = r'G:\RENNES1\Loire_totale_automne2019\Loire3_Checy-Saint-Dye\05-Traitements\C2\classification\eau_sol'+'//'

@@ -22,7 +22,7 @@ def refraction_correction(filepath, sbet, minimum_depth=0.01):
     output_suffix = "_corbathy"
 
     # open bathymetry file
-    in_data = pl.lastools.readLAS(filepath, extraField=True)
+    in_data = pl.lastools.ReadLAS(filepath, extraField=True)
 
     select = in_data.depth < minimum_depth
     data_under_water = pl.lastools.Filter_LAS(in_data, select)
@@ -40,14 +40,14 @@ def refraction_correction(filepath, sbet, minimum_depth=0.01):
     extra = [(("depth", "float32"), depth_all)]
     data_under_water.XYZ = coords_true
     data_corbathy = pl.lastools.Merge_LAS([data_under_water, data_above_water])
-    pl.lastools.writeLAS(filepath[0:offset_name] + output_suffix + ".laz", data_corbathy, format_id=1, extraField=extra)
+    pl.lastools.WriteLAS(filepath[0:offset_name] + output_suffix + ".laz", data_corbathy, format_id=1, extraField=extra)
 
 
 def refraction_correction_fwf(filepath):
     offset_name = -10
     output_suffix = "_corbathy"
     # open bathymetry file
-    in_data = pl.lastools.readLAS(filepath, True)
+    in_data = pl.lastools.ReadLAS(filepath, True)
 
     vect_app = np.vstack([in_data.x_t, in_data.y_t, in_data.z_t]).transpose()
     vect_true_all = pl.calculs.correction_vect(vect_app)
@@ -72,7 +72,7 @@ def refraction_correction_fwf(filepath):
 
     #return data_corbathy, extra, metadata['vlrs']
     #PL.lastools.writeLAS(filepath[0:offsetName] + "_corbathy2.laz", dataCorbathy, format_id=4, extraField=extra)
-    pl.lastools.writeLAS(filepath[0:offset_name] + output_suffix + ".laz", data_corbathy, format_id=9)
+    pl.lastools.WriteLAS(filepath[0:offset_name] + output_suffix + ".laz", data_corbathy, format_id=9)
     shutil.copyfile(filepath[0:-4] + ".wdp", filepath[0:offset_name] + output_suffix + ".wdp")
 
 
