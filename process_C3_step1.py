@@ -6,7 +6,7 @@ import config_workflow as work
 root_ = 'G:/RENNES1/PaulLeroy/Brioude_30092021'
 #root_ = 'C:/DATA/Brioude_30092021'
 
-idir = os.path.join(root_, '05-Traitements', 'C3')
+idir = os.path.join(root_, '05-Traitements', 'C3_r_denoised', 'lines_i_correction')
 i = os.path.join(idir, '*.laz')
 lax = os.path.join(idir, '*.lax')
 dir_tiles = os.path.join(idir, 'tiles')
@@ -19,7 +19,7 @@ tiles_gc = os.path.join(dir_tiles_1_2_5_6, '*_gc.laz')
 tiles_g_thin = os.path.join(dir_tiles_1_2, '*_g_thin.laz')
 tiles_g_thin_1 = os.path.join(dir_tiles_1_2, '*_g_thin_1.laz')
 odir = os.path.join(idir, 'processing')
-out = os.path.join(odir, 'C3_ground_thin_1m.laz')
+out = os.path.join(odir, 'C3_r_ground_thin_1m.laz')
 
 os.makedirs(dir_tiles, exist_ok=True)  # tiles
 os.makedirs(dir_tiles_1_2, exist_ok=True)  # tiles after lasground (classes 1 and 2)

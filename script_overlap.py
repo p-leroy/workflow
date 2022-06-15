@@ -12,15 +12,16 @@ import plateforme_lidar as pl
 
 #%% THIN LINES
 
-idir = r'G:\RENNES1\PaulLeroy\Brioude_30092021\04-QC\Overlap\C2_C3'
-pattern = '*-1-M01-S1-C2_s.laz'
-odir = r'G:\RENNES1\PaulLeroy\Brioude_30092021\04-QC\Overlap\C2_C3'
+#idir = r'G:\RENNES1\PaulLeroy\Brioude_30092021\04-QC\Overlap\C2_r'
+idir = r'G:\RENNES1\PaulLeroy\Brioude_30092021\03-Calcul_LMS\Brioude\Output'
+pattern = '*-1-M01-S1-C3_r.laz'
+odir = r'G:\RENNES1\PaulLeroy\Brioude_30092021\04-QC\Overlap\C3_r'
 over.thin_lines(idir, pattern, odir)
 
 #%% OVERLAP MAP C3
 
 workspace = odir
-params_file = "m3c2_params.txt"
+m3c2_params = "m3c2_params.txt"
 
 cc_options = ['standard', 'LAS_auto_save', 'Brioude']
 roots_dict = {100: ["L", "-1-M01-S1-C3_s.laz"]}
@@ -29,70 +30,74 @@ max_distance = 10
 line_nb_digits = 3
 settings = [cc_options, roots_dict, max_uncertainty, max_distance, line_nb_digits]
 
-a = overlap_map.Overlap(workspace, params_file, "L_C3_overlap_map.laz", settings)
+a = overlap_map.Overlap(workspace, m3c2_params, "L_C3_overlap_map.laz", settings)
 a.preprocessing(pattern="*_thin.laz")
 overlapping_map = a.processing()
 a.clean_temporary_files()
 
 #%% THIN LINES
 
-idir = r'G:\RENNES1\PaulLeroy\Brioude_30092021\04-QC\Overlap\C3'
-pattern = '*-C3_s.laz'
-odir = r'G:\RENNES1\PaulLeroy\Brioude_30092021\04-QC\Overlap\C3'
+idir = r'G:\RENNES1\PaulLeroy\Brioude_30092021\04-QC\Overlap\C2_r'
+pattern = '*-C2_r.laz'
+odir = r'G:\RENNES1\PaulLeroy\Brioude_30092021\04-QC\Overlap\C2_r_C3_r'
 over.thin_lines(idir, pattern, odir)
 
 #%% OVERLAP CONTROL C2
 
 workspace = r'G:\RENNES1\PaulLeroy\Brioude_30092021\04-QC\Overlap'
-params_file = "m3c2_params.txt"
-surface_water = "water_surface_merged_withDepth_20220505.las"
+m3c2_params = "m3c2_params.txt"
+water_surface = "water_surface_merged_withDepth_20220505.las"
 
 cc_options = ['standard', 'LAS_auto_save', "Brioude"]
-roots_dict = {100: ["L", "-1-M01-S1-C2_s.laz"]}
+roots_dict = {100: ["L", "-1-M01-S1-C2_r.laz"]}
 max_uncertainty = 0.1
 line_nb_digits = 3
 settings = [cc_options, roots_dict, max_uncertainty, line_nb_digits]
 
-folder = "C2"
+folder = "C2_r"
 
-a = overlap_control.Overlap(workspace, params_file, surface_water, settings)
-a.preprocessing(folder, pattern='*_thin.laz', c3_pattern='3_s.laz')
+a = overlap_control.Overlap(workspace, m3c2_params, water_surface, settings)
+a.preprocessing(folder, pattern='*_thin.laz')
 a.processing()
 
 #%% OVERLAP CONTROL C3
 
 workspace = r'G:\RENNES1\PaulLeroy\Brioude_30092021\04-QC\Overlap'
-params_file = "m3c2_params.txt"
-surface_water = "water_surface_merged_withDepth_20220505.las"
-
+lines_dir_a = r'G:\RENNES1\PaulLeroy\Brioude_30092021\03-Calcul_LMS\Brioude\Output'
 cc_options = ['standard', 'LAS_auto_save', "Brioude"]
-roots_dict = {100: ["L", "-1-M01-S1-C3_s.laz"]}
+roots_dict = {100: ["L", "-1-M01-S1-C3_r.laz"]}
 max_uncertainty = 0.1
 line_nb_digits = 3
 settings = [cc_options, roots_dict, max_uncertainty, line_nb_digits]
+m3c2_params = "m3c2_params.txt"
+water_surface = "water_surface_merged_withDepth_20220505.las"
 
-folder = "C3"
+a = overlap_control.Overlap(workspace, lines_dir_a, settings, m3c2_params, water_surface=water_surface)
 
-a = overlap_control.Overlap(workspace, params_file, surface_water, settings)
-a.preprocessing(folder, pattern='*_thin.laz', c3_pattern='3_s.laz')
+folder = "C3_r"
+a.preprocessing(folder, pattern='*_thin.laz', use_water_surface=False)
+
 a.processing()
 
 #%% OVERLAP CONTROL C2_C3
 
 workspace = r'G:\RENNES1\PaulLeroy\Brioude_30092021\04-QC\Overlap'
-params_file = "m3c2_params.txt"
-surface_water = "water_surface_merged_withDepth_20220505.las"
+lines_dir_a = r'G:\RENNES1\PaulLeroy\Brioude_30092021\03-Calcul_LMS\Brioude\Output'
+lines_dir_b = lines_dir_a
+m3c2_params = "m3c2_params.txt"
+water_surface = "water_surface_merged_withDepth_20220505.las"
 
 cc_options = ['standard', 'LAS_auto_save', "Brioude"]
-roots_dict = {100: ["L", "-1-M01-S1-C2_s.laz"]}
-max_uncertainty = 0.1
 line_nb_digits = 3
-settings = [cc_options, roots_dict, max_uncertainty, line_nb_digits]
+line_template = ["L", line_nb_digits, "-1-M01-S1-C2_r.laz"]
+line_template_b = ["L", line_nb_digits, "-1-M01-S1-C3_r.laz"]
+max_uncertainty = 0.1
+settings = [cc_options, line_template, max_uncertainty]
 
-folder = "C2_C3"
+folder = "C2_r_C3_r"
 
-a = overlap_control.Overlap(workspace, params_file, surface_water, settings)
-a.preprocessing(folder, pattern='*_thin.laz', c3_pattern='3_s.laz')
+a = overlap_control.Overlap(workspace, lines_dir_a, settings, m3c2_params, water_surface=water_surface)
+a.preprocessing_c2_c3(folder, lines_dir_b, line_template_b)
 a.processing()
 
 #%% PLOTS

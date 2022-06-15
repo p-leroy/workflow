@@ -87,7 +87,7 @@ def qc_check(pc_with_imax_minus_i, threshold=83, shift=103):
     histogram = np.histogram(intensity, bins=256)
     i_corr = np.r_[low, high]
     histogram_corr = np.histogram(i_corr, bins=256)
-    plt.plot(histogram_corr[1][:-1], histogram_corr[0] / 2, 'o', label='corrected intensity (N/2')
+    plt.plot(histogram_corr[1][:-1], histogram_corr[0] / 2, 'o', label='corrected intensity (N/2)')
     plt.plot(histogram_corr[1][:-1], histogram_corr[0], '.-', label='corrected intensity')
     plt.plot(histogram[1][:-1], histogram[0], '.-', label='initial intensity')
     name = os.path.join(odir, root + '_histo_intensity')
@@ -100,6 +100,7 @@ def qc_check(pc_with_imax_minus_i, threshold=83, shift=103):
     plt.savefig(name)
     plt.close()
     print(f'   => {name}')
+
 
 def correct_intensities_and_add_class(pc_with_imax_minus_i, threshold=83, shift=103):
     print('[correct_intensities_and_add_class]')
