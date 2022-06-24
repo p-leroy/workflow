@@ -32,23 +32,29 @@ except ImportError:
 # 7 ScanAngleRank
 # 8 PointSourceId
 
-# OTHER SCALAR FIELDS
-# 9 C2C3_Z
+# 9 C2C3_XY
 # 10 C2C3
-# 11 C2C3_XY
-# 12 Dip (degrees)
-# 13 Dip direction (degrees)
-# 14 Number of neighbors (r=5)
-i_c2c3_z = 9
+# 11 C2C3_X
+# 12 C2C3_Y
+# 13 C2C3_Z
+i_c2c3_xy = 9
 i_c2c3 = 10
-i_c2c3_xy = 11
+i_c2c3_x = 11
+i_c2c3_y = 12
+i_c2c3_z = 13
+
+# 14 Dip (degrees)
+# 15 Dip direction (degrees)
+# 16 Number of neighbors (r=5)
 i_dip = 12
 i_nn = 14
 
-# OTHER SCALAR FIELDS
-# 12 C2C absolute distances (Z)
-# 13 C2C absolute distances
 # 14 C2C absolute distances (XY)
+# 13 C2C absolute distances
+# 12 C2C absolute distances (X)
+# 12 C2C absolute distances (Y)
+# 12 C2C absolute distances (Z)
+
 i_c2c_z = 12
 i_c2c = 13
 i_c2c_xy = 14
@@ -77,7 +83,9 @@ def get_shift(config):
     # the shift comes from
     # 1) the intensity correction, i.e. imax_minus_i and intensity_class SF have been added
     # 2) the classification field added by lastools
-    if config == 'i_corr_classified':
+    if config == 'classified':
+        shift = 0
+    elif config == 'i_corr_classified':
         shift = 2
     elif config == 'i_corr_not_classified':
         shift = 1
@@ -103,9 +111,11 @@ def c2c_c2c3(compared, reference, config):
     cmd += f' -O {reference}'
     cmd += ' -C2C_DIST -SPLIT_XY_Z'
     cmd += ' -POP_CLOUDS'
-    cmd += f' -RENAME_SF {i_c2c3_z + shift} C2C3_Z'
-    cmd += f' -RENAME_SF {i_c2c3 + shift} C2C3'
     cmd += f' -RENAME_SF {i_c2c3_xy + shift} C2C3_XY'
+    cmd += f' -RENAME_SF {i_c2c3 + shift} C2C3'
+    cmd += f' -RENAME_SF {i_c2c3_x + shift} C2C3_X'
+    cmd += f' -RENAME_SF {i_c2c3_y + shift} C2C3_Y'
+    cmd += f' -RENAME_SF {i_c2c3_z + shift} C2C3_Z'
     cmd += f' -SAVE_CLOUDS FILE {out}'
     run(cmd)
 
