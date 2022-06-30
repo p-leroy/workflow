@@ -5,9 +5,6 @@ import os
 logger = logging.getLogger(__name__)
 logging.basicConfig()
 
-global_shift_vieux_rhin = (-1037000.0, -6741000.0, 0.0)
-global_shift_vieux_rhin_fwf = (-1040000., -6770000., 0.)
-
 try:
     import ccConfig
     import common_ple
