@@ -4,7 +4,7 @@ import os
 import config_workflow as work
 
 root_ = 'G:\RENNES1\Vieux_Rhin_2022'
-idir = os.path.join(root_, 'processing', 'C3')
+idir = os.path.join(root_, 'processing', 'C3_denoised')
 
 i = os.path.join(idir, '*.laz')
 lax = os.path.join(idir, '*.lax')
@@ -20,7 +20,7 @@ tiles_ground_1 = os.path.join(dir_tiles_2, '*_ground_1.laz')
 tiles_ground_1_thin = os.path.join(dir_tiles_2, '*_ground_1_thin.laz')
 tiles_other = os.path.join(dir_tiles_1_5_6, '*_other.laz')
 odir = os.path.join(idir, 'processing')
-out = os.path.join(odir, 'C3_r_ground_thin_1m.laz')
+out = os.path.join(odir, 'C3_denoised_ground_thin_1m.laz')
 
 os.makedirs(dir_tiles, exist_ok=True)  # tiles
 os.makedirs(dir_tiles_1_2, exist_ok=True)  # tiles after lasground (classes 1 and 2)
@@ -64,7 +64,7 @@ work.run(f'lastile -i {tiles_other} -remove_buffer -cores {cores} -olaz')
 work.run(f'lasthin -i {tiles_ground_1} -keep_class 2 -step 1 -lowest -cores {cores} -odix _thin -olaz')
 work.run(f'lasmerge -i {tiles_ground_1_thin} -o {out}')
 
-# CLEAN TEMPORARY FILES
+#%% CLEAN TEMPORARY FILES
 work.remove(lax)
 os.rmdir(dir_tiles_1_2)
 work.remove(tiles_ground)

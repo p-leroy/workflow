@@ -25,7 +25,7 @@ def transform(coords, epsg_src, epsg_dst):
     return tmp
 
 
-def from_tiles(idir, scale=1000, coords_loc=1, epsg_src="epsg:2154", epsg_dst="epsg:4171"):
+def from_tiles(idir, date, scale=1000, coords_loc=1, epsg_src="epsg:2154", epsg_dst="epsg:4171"):
     tiles = os.path.join(idir, "*.laz")
     paths = glob.glob(tiles)
     names = [os.path.splitext(os.path.split(path)[-1])[0] for path in paths]

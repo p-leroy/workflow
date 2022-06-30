@@ -3,7 +3,9 @@ import os
 
 import numpy as np
 
+import cc
 import config_workflow as work
+import ccConfig
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -101,3 +103,58 @@ def get_bottom_hd(bathymetry_hd, bathymetry):
 
 def get_patches_hd():
     pass
+
+
+def is_int(str_):
+    try:
+        int(str_)
+        return True
+    except ValueError:
+        return False
+
+
+def get_sf_index_from_name(config, name):
+    sf_list = [name for name in config['SBF'] if len(name.split('SF')) == 2 and is_int(name.split('SF')[1])]
+    for idx, sf in enumerate(sf_list):
+        if config['SBF'][sf] == name:
+            print(f'[get_sf_index_from_name] {sf} is {name} (index {idx})')
+            return idx
+    return None
+
+
+def get_fwf_from_class_15_and_depth(line, class_15, global_shift):
+    # c2_cloud_with_c2c3_dist shall contain C2C3_Z, C2C3 and C2C3_XY scalar fields
+    if not work.exists(line):
+        return
+    if not work.exists(class_15):
+        return
+
+    print(f'[get_fwf_from_class_15_and_depth] processing {line}')
+
+    head_15, tail_15, root_15, ext_15 = work.head_tail_root_ext(class_15)
+    head_line, tail_line, root_line, ext_line = work.head_tail_root_ext(line)
+    out = os.path.join(head_15, 'fwf', root_line + '.bin')
+
+    # if ext_15 != '.sbf':
+    #     raise ValueError('[get_fwf_from_class_15_and_depth] expecting an SBF file for class 15')
+
+    odir = os.path.join(head_15, 'fwf')
+
+    # config = cc.read_sbf_header(class_15)
+    x, y, z = global_shift
+    #
+    # last_index = int(config['SBF']['SFCount']) - 1
+
+    cmd = ccConfig.cc_dgm
+    cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT BIN -AUTO_SAVE OFF'
+    cmd += f' -FWF_O -GLOBAL_SHIFT {x} {y} {z} {line}'
+    cmd += f' -O -GLOBAL_SHIFT {x} {y} {z} {class_15}'
+    cmd += ' -C2C_DIST -SPLIT_XYZ -MAX_DIST 20'  # 1st = compared / 2nd = reference _ X Y Z
+    cmd += ' -POP_CLOUDS'
+    # keep points around class 15
+    cmd += f' -SET_ACTIVE_SF {work.i_point_source_id + 1} -FILTER_SF 0.001 5.'
+    cmd += f' -SET_ACTIVE_SF {work.i_point_source_id + 4} -FILTER_SF MIN 10'
+    cmd += f' -SAVE_CLOUDS FILE {out}'
+    work.run(cmd)
+
+    return out

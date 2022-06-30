@@ -18,7 +18,7 @@ def extract_seed(cloud, config):
 
     cmd = work.cc_cmd
     cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT BIN -AUTO_SAVE OFF'
-    cmd += f' -O {cloud}'
+    cmd += f' -O -GLOBAL_SHIFT AUTO {cloud}'
     cmd += f' -SET_ACTIVE_SF {work.i_c2c3_z + shift} -FILTER_SF 0.5 5.'
     cmd += ' -OCTREE_NORMALS 5. -MODEL LS -ORIENT PLUS_Z -NORMALS_TO_DIP'
     cmd += f' -SET_ACTIVE_SF {work.i_dip + shift} -FILTER_SF MIN 1.'
@@ -49,15 +49,17 @@ def propagate_1deg(c2_cloud_with_c2c3_dist, current_surface, config, deepness=0.
 
     cmd = work.cc_cmd
     cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT BIN -AUTO_SAVE OFF'
-    cmd += f' -O {c2_cloud_with_c2c3_dist}'
-    cmd += f' -O {current_surface}'
+    cmd += f' -O -GLOBAL_SHIFT AUTO {c2_cloud_with_c2c3_dist}'
+    cmd += f' -O -GLOBAL_SHIFT FIRST {current_surface}'
     cmd += ' -C2C_DIST -SPLIT_XY_z'
+    cmd += f' -REMOVE_SF {work.i_c2c_y + shift}'
+    cmd += f' -REMOVE_SF {work.i_c2c_x + shift}'
     cmd += ' -POP_CLOUDS'
     cmd += f' -SET_ACTIVE_SF {work.i_c2c_xy + shift} -FILTER_SF 0.001 10.'  # keep closest points and avoid duplicates (i.e. xy = 0)
     cmd += f' -SET_ACTIVE_SF {work.i_c2c3_z + shift} -FILTER_SF {deepness} MAX'  # consider only points with C2 above C3
     cmd += f' -SF_OP_SF {work.i_c2c_z + shift} DIV {work.i_c2c_xy + shift}'  # compute the dip
     cmd += f' -SET_ACTIVE_SF {work.i_c2c_z + shift} -FILTER_SF {-dip} {dip}'  # filter wrt dip
-    cmd += f' -O {current_surface} -MERGE_CLOUDS' # merge new points with the previous ones
+    cmd += f' -O -GLOBAL_SHIFT FIRST {current_surface} -MERGE_CLOUDS' # merge new points with the previous ones
     cmd += f' -SAVE_CLOUDS FILE {out}'
     work.run(cmd)
 

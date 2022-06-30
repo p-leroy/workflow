@@ -13,24 +13,30 @@ import os
 
 import common_ple as ple
 
-root_ = 'G:/RENNES1/PaulLeroy/Brioude_30092021'
-# root_ = 'C:/DATA/Brioude_30092021'
+root_ = 'G:\RENNES1\Vieux_Rhin_2022'
+idir = os.path.join(root_, 'processing', 'C2')
 
-idir = os.path.join(root_, '05-Traitements', 'C2_r_denoised')
 i = os.path.join(idir, '*.laz')
 lax = os.path.join(idir, '*.lax')
 dir_tiles = os.path.join(idir, 'tiles')
-dir_tiles_2 = os.path.join(idir, 'tiles_2')
+dir_tiles_1_2 = os.path.join(idir, 'tiles_1_2')
 dir_tiles_1_5_6 = os.path.join(idir, 'tiles_1_5_6')
+dir_tiles_2 = os.path.join(idir, 'tiles_2')
 tiles = os.path.join(dir_tiles, '*.laz')
-tiles_g = os.path.join(dir_tiles, '*_g.laz')
-tiles_gc = os.path.join(dir_tiles, '*_gc.laz')
+tiles_g = os.path.join(dir_tiles_1_2, '*_g.laz')
+tiles_gc = os.path.join(dir_tiles_1_2, '*_gc.laz')
 tiles_ground = os.path.join(dir_tiles_2, '*_ground.laz')
-tiles_ground_thin = os.path.join(dir_tiles_2, '*_ground_thin.laz')
-tiles_ground_thin_1 = os.path.join(dir_tiles_2, '*_ground_thin_1.laz')
+tiles_ground_1 = os.path.join(dir_tiles_2, '*_ground_1.laz')
+tiles_ground_1_thin = os.path.join(dir_tiles_2, '*_ground_1_thin.laz')
 tiles_other = os.path.join(dir_tiles_1_5_6, '*_other.laz')
 odir = os.path.join(idir, 'processing')
 out = os.path.join(odir, 'C2_r_ground_thin_1m.laz')
+
+os.makedirs(dir_tiles, exist_ok=True)  # tiles
+os.makedirs(dir_tiles_1_2, exist_ok=True)  # tiles after lasground (classes 1 and 2)
+os.makedirs(dir_tiles_2, exist_ok=True)  # only ground points (class 2)
+os.makedirs(dir_tiles_1_5_6, exist_ok=True)  # tiles classified after lasclassify (classes 1, 2, 5 and 6)
+os.makedirs(odir, exist_ok=True)
 
 buffer = 25
 cores = 50
@@ -41,31 +47,24 @@ cpuCount = multiprocessing.cpu_count()
 print(f"cpu_count {cpuCount}")
 
 
-def create_directories():
-    # create directories
-    if not os.path.exists(dir_tiles):
-        os.makedirs(dir_tiles)
-    if not os.path.exists(dir_tiles_2):
-        os.makedirs(dir_tiles_2)
-    if not os.path.exists(dir_tiles_1_5_6):
-        os.makedirs(dir_tiles_1_5_6)
-
-
 def remove(file):
     for f in glob.glob(file):
         os.remove(f)
 
 
 #%%
-create_directories()
 # index las files
 ple.exe(f'lasindex -i {i} -cores {cores}')
 # build tiles
 ple.exe(f'lastile -i {i} -tile_size {tile_size} -buffer {buffer} -cores {cores} -odir {dir_tiles} -o {o}')
+
+# CLASSIFY
 # bare-earth extraction: ground points (class = 2) and non-ground points (class = 1)
-ple.exe(f'lasground -i {tiles} -step 6 -nature -extra_fine -cores {cores} -compute_height -odix _g -olaz')
+ple.exe(f'lasground -i {tiles} -step 6 -nature -extra_fine -cores {cores} -compute_height -odir {dir_tiles_1_2} -odix _g -olaz')
 # classify buildings (class = 6) and high vegetation (class = 5)
 ple.exe(f'lasclassify -i {tiles_g} -cores {cores} -odix c -olaz')
+
+# SEPARATE CLASSES
 # keep only ground points (class = 2)
 ple.exe(f'las2las -i {tiles_gc} -keep_class 2 -cores {cores} -odir {dir_tiles_2} -odix _ground -olaz')
 # drop ground points (class = 2)
@@ -75,13 +74,14 @@ ple.exe(f'lastile -i {tiles_ground} -remove_buffer -cores {cores} -olaz')
 # remove buffer (will add _1 to each tile name)
 ple.exe(f'lastile -i {tiles_other} -remove_buffer -cores {cores} -olaz')
 
-ple.exe(f'lasthin -i {tiles_ground} -step 1 -lowest -cores {cores} -odix _thin -olaz')
-# remove buffer (will add _1 to each tile name)
-ple.exe(f'lastile -i {tiles_ground_thin} -remove_buffer -cores {cores} -olaz')
-ple.exe(f'lasmerge -i -v {tiles_ground_thin_1} -o {out}')
+# THIN DATA AND MERGE
+ple.exe(f'lasthin -i {tiles_ground_1} -step 1 -lowest -cores {cores} -odix _thin -olaz')
+ple.exe(f'lasmerge -i -v {tiles_ground_1_thin} -o {out}')
 
+# CLEAN TEMPORARY FILES
 remove(lax)
 remove(tiles_g)
 remove(tiles_gc)
-remove(tiles_ground_thin)
-remove(tiles_ground_thin_1)
+remove(tiles_ground)
+remove(tiles_ground_1_thin)
+remove(tiles_other)

@@ -5,6 +5,9 @@ import os
 logger = logging.getLogger(__name__)
 logging.basicConfig()
 
+global_shift_vieux_rhin = (-1037000.0, -6741000.0, 0.0)
+global_shift_vieux_rhin_fwf = (-1040000., -6770000., 0.)
+
 try:
     import ccConfig
     import common_ple
@@ -32,26 +35,37 @@ except ImportError:
 # 7 ScanAngleRank
 # 8 PointSourceId
 
-# OTHER SCALAR FIELDS
-# 9 C2C3_Z
+i_point_source_id = 8
+
+# 9 C2C3_XY
 # 10 C2C3
-# 11 C2C3_XY
-# 12 Dip (degrees)
-# 13 Dip direction (degrees)
-# 14 Number of neighbors (r=5)
-i_c2c3_z = 9
+# 11 C2C3_X
+# 12 C2C3_Y
+# 13 C2C3_Z
+i_c2c3_xy = 9
 i_c2c3 = 10
-i_c2c3_xy = 11
+i_c2c3_x = 11  # REMOVED
+i_c2c3_y = 12  # REMOVED
+i_c2c3_z = 11  # AFTER REMOVAL OF X AND Y
+
+# 14 Dip (degrees)
+# 15 Dip direction (degrees)
+# 16 Number of neighbors (r=5)
 i_dip = 12
 i_nn = 14
 
-# OTHER SCALAR FIELDS
-# 12 C2C absolute distances (Z)
+# 12 C2C absolute distances (XY)
 # 13 C2C absolute distances
-# 14 C2C absolute distances (XY)
-i_c2c_z = 12
+# 14 C2C absolute distances (X)
+# 15 C2C absolute distances (Y)
+# 16 C2C absolute distances (Z)
+
+i_c2c_xy = 12
 i_c2c = 13
-i_c2c_xy = 14
+i_c2c_x = 14  # REMOVED
+i_c2c_y = 15  # REMOVED
+i_c2c_z = 14  # AFTER REMOVAL OF X AND Y
+
 
 
 def exists(path):
@@ -77,7 +91,9 @@ def get_shift(config):
     # the shift comes from
     # 1) the intensity correction, i.e. imax_minus_i and intensity_class SF have been added
     # 2) the classification field added by lastools
-    if config == 'i_corr_classified':
+    if config == 'classified':
+        shift = 0
+    elif config == 'i_corr_classified':
         shift = 2
     elif config == 'i_corr_not_classified':
         shift = 1
@@ -89,7 +105,7 @@ def get_shift(config):
     return shift
 
 
-def c2c_c2c3(compared, reference, config):
+def c2c_c2c3(compared, reference, config, global_shift):
     # compute cloud to cloud distances and rename the scalar fields for further processing
     head, tail = os.path.split(compared)
     root, ext = os.path.splitext(tail)
@@ -99,10 +115,18 @@ def c2c_c2c3(compared, reference, config):
 
     cmd = cc_cmd
     cmd += ' -SILENT -NO_TIMESTAMP -C_EXPORT_FMT BIN -AUTO_SAVE OFF'
-    cmd += f' -O {compared}'
+    if global_shift == 'auto':
+        cmd += f' -O -GLOBAL_SHIFT AUTO {compared}'
+    else:
+        shift_x = global_shift[0]
+        shift_y = global_shift[1]
+        shift_z = global_shift[2]
+        cmd += f' -O -GLOBAL_SHIFT {shift_x} {shift_y} {shift_z} {compared}'
     cmd += f' -O {reference}'
     cmd += ' -C2C_DIST -SPLIT_XY_Z'
     cmd += ' -POP_CLOUDS'
+    cmd += f' -REMOVE_SF {i_c2c3_y + shift}'
+    cmd += f' -REMOVE_SF {i_c2c3_x + shift}'
     cmd += f' -RENAME_SF {i_c2c3_z + shift} C2C3_Z'
     cmd += f' -RENAME_SF {i_c2c3 + shift} C2C3'
     cmd += f' -RENAME_SF {i_c2c3_xy + shift} C2C3_XY'
